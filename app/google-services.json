@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "757574038141",
+    "project_id": "android-pdf-reader-ab980",
+    "storage_bucket": "android-pdf-reader-ab980.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:757574038141:android:77be77a636e09f8ce4f714",
+        "android_client_info": {
+          "package_name": "com.value.light.pdf.reader"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "757574038141-qbtjotjjugjngm7sis69qgl9uqlt56np.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBv5i7FHNk3s_UXoOC3q3CTlvAOSalXn78"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "757574038141-qbtjotjjugjngm7sis69qgl9uqlt56np.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:757574038141:android:da79ebeb9d50eae3e4f714",
+        "android_client_info": {
+          "package_name": "com.value.light.pdf.reader"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "757574038141-qbtjotjjugjngm7sis69qgl9uqlt56np.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBv5i7FHNk3s_UXoOC3q3CTlvAOSalXn78"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "757574038141-qbtjotjjugjngm7sis69qgl9uqlt56np.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

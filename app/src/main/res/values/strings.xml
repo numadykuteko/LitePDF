@@ -1,0 +1,40 @@
+<resources>
+    <string name="app_name">LightPdf</string>
+    <string name="cancel_text">Cancel</string>
+    <string name="confirm_text">OK</string>
+    <string name="default_notification_channel_id">PDF Reader</string>
+
+    <string name="loading_ads_text">Loading ads…</string>
+
+    <string name="menu_search">Search</string>
+    <string name="menu_sort">Sort</string>
+    <string name="menu_pick_file">Pick file</string>
+    <string name="menu_share">Share file</string>
+    <string name="menu_rename">Rename file</string>
+    <string name="menu_delete">Delete file</string>
+
+    <string name="no_pdf_found">No PDF file found!</string>
+    <string name="accept_permission_show_pdf">Discover PDF files</string>
+    <string name="loading_file_text">Loading files…</string>
+    <string name="sort_not_available">Sort function is NOT available now.</string>
+    <string name="can_not_select_file">Select file not successfully. Please choose file from Local storage or Google drive app only.</string>
+
+    <string name="sort_name">Name</string>
+    <string name="sort_file_size">File Size</string>
+    <string name="sort_create_date">Created Date</string>
+    <string name="sort_asc">Ascending</string>
+    <string name="sort_desc">Descending</string>
+
+    <string name="rename_file_title">File name</string>
+    <string name="rename_file_enter_name">Enter file name</string>
+    <string name="delete_file">Delete file</string>
+    <string name="delete_file_question">Are you sure you want to delete this file?</string>
+    <string name="please_input_name_text">Please input file name.</string>
+    <string name="can_not_edit_file_name">Can not edit file name.</string>
+    <string name="duplicate_video_name">File name is duplicated</string>
+    <string name="rename_file_success">Rename file success</string>
+    <string name="delete_success_text">Delete success…</string>
+
+    <string name="full_detail_file">%s • %s</string>
+
+</resources>
