@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".activity.ViewPdfActivity">
+    tools:context="com.pdf.reader.lite.activity.ViewPdfActivity">
 
     <LinearLayout
         android:id="@+id/pdf_view_container"
@@ -18,7 +18,7 @@
         app:layout_constraintTop_toBottomOf="@id/separator"
         app:layout_constraintVertical_bias="1.0">
 
-        <com.value.light.pdf.reader.lib.PDFViewPager
+        <com.pdf.reader.lite.lib.PDFViewPager
             android:id="@+id/pdfviewfpager"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

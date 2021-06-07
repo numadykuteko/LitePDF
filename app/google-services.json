@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:757574038141:android:77be77a636e09f8ce4f714",
         "android_client_info": {
-          "package_name": "com.value.light.pdf.reader"
+          "package_name": "com.pdf.reader.lite"
         }
       },
       "oauth_client": [
@@ -38,7 +38,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:757574038141:android:da79ebeb9d50eae3e4f714",
         "android_client_info": {
-          "package_name": "com.value.light.pdf.reader"
+          "package_name": "com.pdf.reader.lite"
         }
       },
       "oauth_client": [

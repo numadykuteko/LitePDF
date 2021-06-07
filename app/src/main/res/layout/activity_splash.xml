@@ -8,7 +8,7 @@
     android:gravity="center"
     android:orientation="vertical"
     android:background="@color/background_splash_color"
-    tools:context=".activity.SplashActivity">
+    tools:context="com.pdf.reader.lite.activity.SplashActivity">
 
     <androidx.cardview.widget.CardView
         android:layout_width="120dp"

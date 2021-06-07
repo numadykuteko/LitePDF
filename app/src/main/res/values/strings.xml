@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">LightPdf</string>
+    <string name="app_name">PDF Reader</string>
     <string name="cancel_text">Cancel</string>
     <string name="confirm_text">OK</string>
     <string name="default_notification_channel_id">PDF Reader</string>

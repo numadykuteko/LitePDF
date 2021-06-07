@@ -1,2 +1,2 @@
 include ':app'
-rootProject.name = "LightPdf"
+rootProject.name = "`PDF Reader`"

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.value.light.pdf.reader">
+    package="com.pdf.reader.lite">
 
     <application
-        android:name=".PdfApplication"
+        android:name="com.pdf.reader.lite.PdfApplication"
         android:allowBackup="true"
         android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
@@ -15,7 +15,7 @@
         android:theme="@style/Theme.LightPdf"
         tools:targetApi="q">
         <activity
-            android:name=".activity.SplashActivity"
+            android:name="com.pdf.reader.lite.activity.SplashActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:fitsSystemWindows="true"
             android:screenOrientation="locked"
@@ -58,12 +58,12 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activity.MainActivity"
+            android:name="com.pdf.reader.lite.activity.MainActivity"
             android:hardwareAccelerated="true"
             android:screenOrientation="locked"></activity>
 
         <activity
-            android:name=".activity.ViewPdfActivity"
+            android:name="com.pdf.reader.lite.activity.ViewPdfActivity"
             android:hardwareAccelerated="true"
             android:screenOrientation="locked"></activity>
 
@@ -76,7 +76,7 @@
 
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="com.value.light.pdf.reader.provider"
+            android:authorities="com.pdf.reader.lite.provider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
@@ -85,7 +85,7 @@
         </provider>
 
         <service
-            android:name=".service.AppFirebaseMessagingService"
+            android:name="com.pdf.reader.lite.service.AppFirebaseMessagingService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
