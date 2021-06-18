@@ -101,7 +101,7 @@
         android:orientation="horizontal"
         android:weightSum="3"
         android:background="@color/black"
-        app:layout_constraintBottom_toTopOf="@id/banner_ads"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/pdf_view_container">
         <LinearLayout
             android:id="@+id/option_view_orientation"
@@ -152,15 +152,15 @@
         </LinearLayout>
     </LinearLayout>
 
-    <include
-        android:id="@+id/banner_ads"
-        layout="@layout/layout_banner_control"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+<!--    <include-->
+<!--        android:id="@+id/banner_ads"-->
+<!--        layout="@layout/layout_banner_control"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
 
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
 
-        android:layout_marginTop="@dimen/activity_horizontal_margin" />
+<!--        android:layout_marginTop="@dimen/activity_horizontal_margin" />-->
 
 </androidx.constraintlayout.widget.ConstraintLayout>

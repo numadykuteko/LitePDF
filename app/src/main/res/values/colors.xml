@@ -61,4 +61,13 @@
     <color name="option_view_type_day_mode">#FFFFFF</color>
     <color name="option_view_type_night_mode">#233446</color>
 
+
+
+
+
+
+    <color name="gntRed">#DC1212</color>
+    <color name="colorWhite">#FFFFFF</color>
+    <color name="gntGray">#C7C7C7</color>
+
 </resources>

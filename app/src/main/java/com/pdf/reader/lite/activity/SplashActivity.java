@@ -4,9 +4,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 
-import com.ads.control.Admod;
-import com.ads.control.funtion.AdCallback;
-import com.pdf.reader.lite.BuildConfig;
 import com.pdf.reader.lite.R;
 import com.pdf.reader.lite.utils.NetworkUtils;
 import com.pdf.reader.lite.utils.file.RealPathUtil;
@@ -75,20 +72,7 @@ public class SplashActivity extends BaseActivity {
             return;
         }
 
-        Admod.getInstance().loadSplashInterstitalAds(this,
-                BuildConfig.full_splash_id,
-                30000,
-                new AdCallback() {
-                    @Override
-                    public void onAdClosed() {
-                        gotoTargetActivity();
-                    }
-
-                    @Override
-                    public void onAdFailedToLoad(int i) {
-                        gotoTargetActivity();
-                    }
-                });
+        gotoTargetActivity();
     }
 
     private void gotoTargetActivity() {

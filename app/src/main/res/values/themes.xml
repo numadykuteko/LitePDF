@@ -1,28 +1,20 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <style name="Theme.LightPdf" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+    <style name="Theme.LightPdf" parent="Theme.AppCompat.DayNight.DarkActionBar">
         <item name="colorPrimary">@color/redTotally</item>
-        <item name="colorPrimaryVariant">@color/redTotally</item>
-        <item name="colorOnPrimary">@color/redTotally</item>
-        <item name="colorSecondary">@color/redTotally</item>
-        <item name="colorSecondaryVariant">@color/redTotally</item>
-        <item name="colorOnSecondary">@color/redTotally</item>
+
         <item name="colorAccent">@color/white_totally</item>
-        <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@color/colorWhite</item>
     </style>
 
-    <style name="AppThemeFullScreen" parent="Theme.Design.Light.NoActionBar">
+    <style name="AppThemeFullScreen" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="colorPrimary">@color/redTotally</item>
-        <item name="colorPrimaryVariant">@color/redTotally</item>
-        <item name="colorOnPrimary">@color/redTotally</item>
-        <item name="colorSecondary">@color/redTotally</item>
-        <item name="colorSecondaryVariant">@color/redTotally</item>
-        <item name="colorOnSecondary">@color/redTotally</item>
+
         <item name="colorAccent">@color/white_totally</item>
         <item name="android:statusBarColor" tools:targetApi="l">@color/redTotally</item>
         <item name="android:windowTranslucentStatus">true</item>
     </style>
 
-    <style name="sheet_dialog_style" parent="Theme.Design.Light.BottomSheetDialog">
+    <style name="sheet_dialog_style">
         <!--<item name="android:windowCloseOnTouchOutside">false</item>-->
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowContentOverlay">@null</item>
@@ -35,7 +27,7 @@
 
     <style name="CommonButtonStyle">
         <item name="android:textSize">14sp</item>
-        <item name="android:textColor">@color/colorWhite</item>
+        <item name="android:textColor">#fff</item>
         <item name="android:background">@drawable/bg_button_common</item>
         <item name="android:textAllCaps">false</item>
     </style>

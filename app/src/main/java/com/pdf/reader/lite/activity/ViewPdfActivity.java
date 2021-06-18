@@ -27,8 +27,6 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.FileProvider;
 import androidx.viewpager.widget.ViewPager;
 
-import com.ads.control.Admod;
-import com.pdf.reader.lite.BuildConfig;
 import com.pdf.reader.lite.R;
 import com.pdf.reader.lite.component.ConfirmDialog;
 import com.pdf.reader.lite.component.NoticeDialog;
@@ -147,7 +145,6 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
 
     @SuppressLint("CutPasteId")
     private void initView() {
-        Admod.getInstance().loadBanner(this, BuildConfig.banner_id);
 
         getOldViewOption();
 
@@ -166,7 +163,6 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
         mOrientationImage = findViewById(R.id.option_view_orientation_img);
         mTypeBtnView = findViewById(R.id.option_view_mode);
         mTypeImage = findViewById(R.id.option_view_mode_img);
-        mBannerAds = findViewById(R.id.banner_ads);
 
         mIsViewFull = false;
         setForFullView();
@@ -223,7 +219,7 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
             getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         } else {
             mToolBar.setVisibility(View.VISIBLE);
-            mBannerAds.setVisibility(View.VISIBLE);
+//            mBannerAds.setVisibility(View.VISIBLE);
             mOptionView.setVisibility(View.VISIBLE);
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         }

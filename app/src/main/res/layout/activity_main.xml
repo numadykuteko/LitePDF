@@ -103,11 +103,11 @@
 
     </RelativeLayout>
 
-    <include
-        android:id="@+id/banner_ads"
-        layout="@layout/layout_banner_control"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+<!--    <include-->
+<!--        android:id="@+id/banner_ads"-->
+<!--        layout="@layout/layout_banner_control"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
 
-        android:layout_marginTop="@dimen/common_padding_big" />
+<!--        android:layout_marginTop="@dimen/common_padding_big" />-->
 </LinearLayout>

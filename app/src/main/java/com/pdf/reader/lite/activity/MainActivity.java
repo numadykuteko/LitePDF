@@ -23,19 +23,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 
-import com.ads.control.Admod;
-import com.ads.control.funtion.AdCallback;
-import com.google.android.gms.ads.InterstitialAd;
 import com.pdf.reader.lite.BuildConfig;
 import com.pdf.reader.lite.R;
 import com.pdf.reader.lite.component.ConfirmDialog;
-import com.pdf.reader.lite.component.PdfOptionDialog;
 import com.pdf.reader.lite.component.RenameFileDialog;
 import com.pdf.reader.lite.component.SettingSortDialog;
 import com.pdf.reader.lite.data.FileData;
-import com.pdf.reader.lite.utils.CommonUtils;
 import com.pdf.reader.lite.utils.DateTimeUtils;
-import com.pdf.reader.lite.utils.SnackBarUtils;
 import com.pdf.reader.lite.utils.ToastUtils;
 import com.pdf.reader.lite.utils.adapter.FileListAdapter;
 import com.pdf.reader.lite.utils.adapter.OnFileItemWithOptionClickListener;
@@ -63,7 +57,7 @@ public class MainActivity extends BaseActivity implements OnFileItemWithOptionCl
 
     private FileUtilAsyncTask mAsyncTask;
 
-    private PdfOptionDialog pdfOptionDialog;
+//    private PdfOptionDialog pdfOptionDialog;
     private LinearLayout mDataArea;
     private SwipeRefreshLayout mPullToRefresh;
     private RecyclerView mDataView;
@@ -76,7 +70,7 @@ public class MainActivity extends BaseActivity implements OnFileItemWithOptionCl
 
     private SearchView mSearchView;
 
-    private InterstitialAd mMyPdfInterstitialAd;
+//    private InterstitialAd mMyPdfInterstitialAd;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -241,14 +235,9 @@ public class MainActivity extends BaseActivity implements OnFileItemWithOptionCl
                 @Override
                 public void run() {
                     runOnUiThread(() -> {
-                        Admod.getInstance().forceShowInterstitial(MainActivity.this, mMyPdfInterstitialAd, new AdCallback() {
-                            @Override
-                            public void onAdClosed() {
-                                Intent intent = new Intent(MainActivity.this, ViewPdfActivity.class);
-                                intent.putExtra(ViewPdfActivity.EXTRA_FILE_PATH, filePath);
-                                startActivity(intent);
-                            }
-                        });
+                        Intent intent = new Intent(MainActivity.this, ViewPdfActivity.class);
+                        intent.putExtra(ViewPdfActivity.EXTRA_FILE_PATH, filePath);
+                        startActivity(intent);
                     });
                 }
             }, 500);
@@ -258,8 +247,6 @@ public class MainActivity extends BaseActivity implements OnFileItemWithOptionCl
     }
 
     private void initView() {
-        Admod.getInstance().loadBanner(this, BuildConfig.banner_id);
-        mMyPdfInterstitialAd = Admod.getInstance().getInterstitalAds(this, BuildConfig.full_my_pdf_id);
 
         mDataArea = findViewById(R.id.data_area);
         mPullToRefresh = findViewById(R.id.pull_to_refresh);
@@ -425,14 +412,9 @@ public class MainActivity extends BaseActivity implements OnFileItemWithOptionCl
         if (position >= 0 && position < mFileListAdapter.getFileList().size()) {
             FileData fileData = mFileListAdapter.getFileList().get(position);
 
-            Admod.getInstance().forceShowInterstitial(this, mMyPdfInterstitialAd, new AdCallback() {
-                @Override
-                public void onAdClosed() {
-                    Intent intent = new Intent(MainActivity.this, ViewPdfActivity.class);
-                    intent.putExtra(ViewPdfActivity.EXTRA_FILE_PATH, fileData.getFilePath());
-                    startActivity(intent);
-                }
-            });
+            Intent intent = new Intent(MainActivity.this, ViewPdfActivity.class);
+            intent.putExtra(ViewPdfActivity.EXTRA_FILE_PATH, fileData.getFilePath());
+            startActivity(intent);
         }
     }
 
@@ -441,48 +423,48 @@ public class MainActivity extends BaseActivity implements OnFileItemWithOptionCl
         if (position >= 0 && position < mFileListAdapter.getFileList().size()) {
             FileData fileData = mFileListAdapter.getFileList().get(position);
 
-            if (pdfOptionDialog != null && pdfOptionDialog.isVisible()) {
-                pdfOptionDialog.dismiss();
-            }
-
-            if (mSearchView != null) {
-                mSearchView.clearFocus();
-                CommonUtils.hideKeyboard(this);
-            }
-
-            pdfOptionDialog = new PdfOptionDialog(fileData.getDisplayName(), fileData.getTimeAdded(), position, new PdfOptionDialog.FileOptionListener() {
-                @Override
-                public void openFile(int position) {
-                    openPdfFile(position);
-                }
-
-                @Override
-                public void shareFile(int position) {
-                    sharePdfFile(position);
-                }
-
-                @Override
-                public void printFile(int position) {
-                    printPdfFile(position);
-                }
-
-                @Override
-                public void uploadFile(int position) {
-                    uploadPdfFile(position);
-                }
-
-                @Override
-                public void renameFile(int position) {
-                    renamePdfFile(position);
-                }
-
-                @Override
-                public void deleteFile(int position) {
-                    deletePdfFile(position);
-                }
-            });
-            pdfOptionDialog.show(getSupportFragmentManager(), pdfOptionDialog.getTag());
-            CommonUtils.hideKeyboard(this);
+//            if (pdfOptionDialog != null && pdfOptionDialog.isVisible()) {
+//                pdfOptionDialog.dismiss();
+//            }
+//
+//            if (mSearchView != null) {
+//                mSearchView.clearFocus();
+//                CommonUtils.hideKeyboard(this);
+//            }
+//
+//            pdfOptionDialog = new PdfOptionDialog(fileData.getDisplayName(), fileData.getTimeAdded(), position, new PdfOptionDialog.FileOptionListener() {
+//                @Override
+//                public void openFile(int position) {
+//                    openPdfFile(position);
+//                }
+//
+//                @Override
+//                public void shareFile(int position) {
+//                    sharePdfFile(position);
+//                }
+//
+//                @Override
+//                public void printFile(int position) {
+//                    printPdfFile(position);
+//                }
+//
+//                @Override
+//                public void uploadFile(int position) {
+//                    uploadPdfFile(position);
+//                }
+//
+//                @Override
+//                public void renameFile(int position) {
+//                    renamePdfFile(position);
+//                }
+//
+//                @Override
+//                public void deleteFile(int position) {
+//                    deletePdfFile(position);
+//                }
+//            });
+//            pdfOptionDialog.show(getSupportFragmentManager(), pdfOptionDialog.getTag());
+//            CommonUtils.hideKeyboard(this);
         }
     }
 
@@ -516,9 +498,9 @@ public class MainActivity extends BaseActivity implements OnFileItemWithOptionCl
                 if (result == -2 || result == 0) {
                     ToastUtils.showMessageShort(getApplicationContext(), getString(R.string.can_not_edit_file_name));
                 } else if (result == -1) {
-                    SnackBarUtils.getSnackbar(MainActivity.this, getString(R.string.duplicate_video_name) + ": " + name).show();
+//                    SnackBarUtils.getSnackbar(MainActivity.this, getString(R.string.duplicate_video_name) + ": " + name).show();
                 } else {
-                    SnackBarUtils.getSnackbar(MainActivity.this, getString(R.string.rename_file_success)).show();
+//                    SnackBarUtils.getSnackbar(MainActivity.this, getString(R.string.rename_file_success)).show();
                     fileData.setFilePath(fileData.getFilePath().replace(fileData.getDisplayName(), newName));
                     fileData.setDisplayName(newName);
 
@@ -557,7 +539,7 @@ public class MainActivity extends BaseActivity implements OnFileItemWithOptionCl
                     if (mListFile.size() == 0) {
                         showNoDataArea();
                     }
-                    SnackBarUtils.getSnackbar(MainActivity.this, getString(R.string.delete_success_text)).show();
+//                    SnackBarUtils.getSnackbar(MainActivity.this, getString(R.string.delete_success_text)).show();
                 }
             }
 
