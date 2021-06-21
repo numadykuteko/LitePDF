@@ -4,6 +4,13 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
+
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.InterstitialAd;
+import com.google.android.gms.ads.LoadAdError;
+import com.pdf.reader.lite.BuildConfig;
 import com.pdf.reader.lite.R;
 import com.pdf.reader.lite.utils.NetworkUtils;
 import com.pdf.reader.lite.utils.file.RealPathUtil;
@@ -15,6 +22,8 @@ public class SplashActivity extends BaseActivity {
 
     private boolean mIsFromOpenPdf = false;
     private String mFilePdfPath = null;
+    private InterstitialAd mInterstitialAd;
+    private Timer mTimer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,14 +43,14 @@ public class SplashActivity extends BaseActivity {
             String type = intent.getType();
             String filepath = null;
 
-            if (Intent.ACTION_VIEW.equals(action) && type != null && type.endsWith("pdf")) {
+            if (Intent.ACTION_VIEW.equals(action) && type != null && type.toLowerCase().endsWith("pdf")) {
                 Uri fileUri = intent.getData();
                 if (fileUri != null) {
                     filepath = RealPathUtil.getInstance().getRealPath(this, fileUri);
                 }
 
                 mIsFromOpenPdf = true;
-            } else if (Intent.ACTION_SEND.equals(action) && type != null && type.endsWith("pdf")) {
+            } else if (Intent.ACTION_SEND.equals(action) && type != null && type.toLowerCase().endsWith("pdf")) {
                 Uri fileUri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
                 if (fileUri != null) {
                     filepath = RealPathUtil.getInstance().getRealPath(this, fileUri);
@@ -72,10 +81,58 @@ public class SplashActivity extends BaseActivity {
             return;
         }
 
-        gotoTargetActivity();
+        mTimer = new Timer();
+        mTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                runOnUiThread(() -> {
+                    mInterstitialAd.setAdListener(new AdListener());
+                    gotoTargetActivity();
+                });
+            }
+        }, 10000);
+
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mInterstitialAd = new InterstitialAd(this);
+        mInterstitialAd.setAdUnitId(BuildConfig.full_splash_id);
+        mInterstitialAd.setAdListener(new AdListener() {
+            @Override
+            public void onAdLoaded() {
+                mInterstitialAd.show();
+            }
+
+            @Override
+            public void onAdFailedToLoad(LoadAdError adError) {
+                gotoTargetActivity();
+            }
+
+            @Override
+            public void onAdOpened() {
+                if (mTimer != null) {
+                    mTimer.cancel();
+                }
+                // Code to be executed when the ad is displayed.
+            }
+
+            @Override
+            public void onAdClicked() {
+                // Code to be executed when the user clicks on an ad.
+            }
+
+            @Override
+            public void onAdClosed() {
+                gotoTargetActivity();
+            }
+
+        });
+        mInterstitialAd.loadAd(adRequest);
     }
 
     private void gotoTargetActivity() {
+        if (mTimer != null) {
+            mTimer.cancel();
+        }
+
         Intent intent;
         if (!mIsFromOpenPdf || mFilePdfPath == null) {
             intent = new Intent(SplashActivity.this, MainActivity.class);

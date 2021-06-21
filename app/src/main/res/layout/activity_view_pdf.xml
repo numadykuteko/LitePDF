@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/white_totally"
     tools:context="com.pdf.reader.lite.activity.ViewPdfActivity">
 
     <LinearLayout
@@ -102,7 +103,8 @@
         android:weightSum="3"
         android:background="@color/black"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/pdf_view_container">
+        app:layout_constraintTop_toBottomOf="@id/pdf_view_container"
+        app:layout_constraintBottom_toTopOf="@id/banner_ads">
         <LinearLayout
             android:id="@+id/option_view_orientation"
             android:layout_width="0dp"
@@ -152,15 +154,12 @@
         </LinearLayout>
     </LinearLayout>
 
-<!--    <include-->
-<!--        android:id="@+id/banner_ads"-->
-<!--        layout="@layout/layout_banner_control"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="wrap_content"-->
+    <RelativeLayout
+        android:id="@+id/banner_ads"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginTop="@dimen/activity_horizontal_margin"
+        app:layout_constraintBottom_toBottomOf="parent"
 
-<!--        app:layout_constraintBottom_toBottomOf="parent"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-
-<!--        android:layout_marginTop="@dimen/activity_horizontal_margin" />-->
-
+        app:layout_constraintStart_toStartOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

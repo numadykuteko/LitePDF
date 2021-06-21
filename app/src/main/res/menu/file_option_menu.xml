@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/menu_open_file"
+        android:icon="@drawable/ic_pdf_black"
+        android:title="@string/menu_open"/>
+
+    <item
+        android:id="@+id/menu_share_file"
+        android:icon="@drawable/ic_share"
+        android:title="@string/menu_share"/>
+
+    <item
+        android:id="@+id/menu_print_file"
+        android:icon="@drawable/ic_print"
+        android:title="@string/menu_print"/>
+
+    <item
+        android:id="@+id/menu_upload_file"
+        android:icon="@drawable/ic_upload"
+        android:title="@string/menu_upload"/>
+
+    <item
+        android:id="@+id/menu_rename_file"
+        android:icon="@drawable/ic_rename"
+        android:title="@string/menu_rename"/>
+
+    <item
+        android:id="@+id/menu_delete_file"
+        android:icon="@drawable/ic_delete"
+        android:title="@string/menu_delete"/>
+</menu>

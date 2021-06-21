@@ -56,12 +56,12 @@ public class FileListViewHolder extends RecyclerView.ViewHolder {
         });
 
         mMoreView.setOnClickListener(view -> {
-            listener.onOptionItem(position);
+            listener.onOptionItem(mMoreView, position);
         });
 
         mContentView.setLongClickable(true);
         mContentView.setOnLongClickListener(v -> {
-            listener.onOptionItem(position);
+            listener.onOptionItem(mMoreView, position);
             return true;
         });
     }

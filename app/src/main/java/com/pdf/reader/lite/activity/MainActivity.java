@@ -22,13 +22,22 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
+import android.widget.RelativeLayout;
 
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdSize;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.InterstitialAd;
+import com.google.android.gms.ads.LoadAdError;
 import com.pdf.reader.lite.BuildConfig;
 import com.pdf.reader.lite.R;
 import com.pdf.reader.lite.component.ConfirmDialog;
 import com.pdf.reader.lite.component.RenameFileDialog;
 import com.pdf.reader.lite.component.SettingSortDialog;
 import com.pdf.reader.lite.data.FileData;
+import com.pdf.reader.lite.utils.CommonUtils;
 import com.pdf.reader.lite.utils.DateTimeUtils;
 import com.pdf.reader.lite.utils.ToastUtils;
 import com.pdf.reader.lite.utils.adapter.FileListAdapter;
@@ -55,9 +64,6 @@ public class MainActivity extends BaseActivity implements OnFileItemWithOptionCl
     private List<FileData> mListFile = new ArrayList<>();
     private FileListAdapter mFileListAdapter;
 
-    private FileUtilAsyncTask mAsyncTask;
-
-//    private PdfOptionDialog pdfOptionDialog;
     private LinearLayout mDataArea;
     private SwipeRefreshLayout mPullToRefresh;
     private RecyclerView mDataView;
@@ -70,7 +76,12 @@ public class MainActivity extends BaseActivity implements OnFileItemWithOptionCl
 
     private SearchView mSearchView;
 
-//    private InterstitialAd mMyPdfInterstitialAd;
+    private RelativeLayout mBannerAds;
+
+    private InterstitialAd mMyPdfInterstitialAd;
+    private boolean mAdsLoading = false;
+    private boolean mAdsLoaded = false;
+    private AdRequest mAdRequest;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,6 +90,7 @@ public class MainActivity extends BaseActivity implements OnFileItemWithOptionCl
         setContentView(R.layout.activity_main);
 
         initView();
+        preloadAds();
     }
 
     @Override
@@ -92,9 +104,7 @@ public class MainActivity extends BaseActivity implements OnFileItemWithOptionCl
         mSearchView = (SearchView) searchItem.getActionView();
         mSearchView.setMaxWidth(Integer.MAX_VALUE);
 
-        mSearchView.setOnSearchClickListener(v -> {
-            sortItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
-        });
+        mSearchView.setOnSearchClickListener(v -> sortItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER));
         mSearchView.setOnCloseListener(() -> {
             sortItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
             return false;
@@ -107,9 +117,7 @@ public class MainActivity extends BaseActivity implements OnFileItemWithOptionCl
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                if (mIsLoading) {
-                    // donothing
-                } else {
+                if (!mIsLoading) {
                     searchForFile(newText.trim());
                 }
                 return false;
@@ -119,6 +127,7 @@ public class MainActivity extends BaseActivity implements OnFileItemWithOptionCl
         return super.onCreateOptionsMenu(menu);
     }
 
+    @SuppressLint("NonConstantResourceId")
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
@@ -189,7 +198,6 @@ public class MainActivity extends BaseActivity implements OnFileItemWithOptionCl
                 Cursor returnCursor = getContentResolver().query(uri, null, null, null, null);
 
                 int nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
-                int sizeIndex = returnCursor.getColumnIndex(OpenableColumns.SIZE);
                 returnCursor.moveToFirst();
                 String originalName = (returnCursor.getString(nameIndex));
 
@@ -198,10 +206,10 @@ public class MainActivity extends BaseActivity implements OnFileItemWithOptionCl
                 }
 
                 File rootDir = getFilesDir();
-                File file = File.createTempFile(originalName, ".pdf", rootDir);;
+                File file = File.createTempFile(originalName, ".pdf", rootDir);
                 InputStream inputStream = getContentResolver().openInputStream(uri);
                 FileOutputStream outputStream = new FileOutputStream(file);
-                int read = 0;
+                int read;
                 int maxBufferSize = 1024 * 1024;
                 int bytesAvailable = inputStream.available();
 
@@ -214,21 +222,16 @@ public class MainActivity extends BaseActivity implements OnFileItemWithOptionCl
                 inputStream.close();
                 outputStream.close();
 
-                runOnUiThread(() -> {
-                    checkFilePathGet(uri, file.getPath());
-                });
+                runOnUiThread(() -> checkFilePathGet(uri, file.getPath()));
 
             } catch (Exception e) {
-                runOnUiThread(() -> {
-                    checkFilePathGet(uri, null);
-                });
+                runOnUiThread(() -> checkFilePathGet(uri, null));
             }
         });
     }
 
     protected void checkFilePathGet(Uri uri, String filePath) {
         if (uri != null && filePath != null && filePath.length() > 0 && FileUtils.checkFileExist(filePath)) {
-
 
             Timer timer = new Timer();
             timer.schedule(new TimerTask() {
@@ -255,6 +258,22 @@ public class MainActivity extends BaseActivity implements OnFileItemWithOptionCl
         mNoPermissionArea = findViewById(R.id.no_permission_area);
         mLoadingArea = findViewById(R.id.loading_area);
 
+        mBannerAds = findViewById(R.id.banner_ads);
+
+        AdView mAdView = new AdView(this);
+        mAdView.setAdSize(AdSize.SMART_BANNER);
+        mAdView.setAdUnitId(BuildConfig.banner_id);
+        mBannerAds.addView(mAdView);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.setAdListener(new AdListener() {
+            @Override
+            public void onAdFailedToLoad(LoadAdError loadAdError) {
+                mBannerAds.setVisibility(View.GONE);
+                super.onAdFailedToLoad(loadAdError);
+            }
+        });
+        mAdView.loadAd(adRequest);
+
         checkPermissionOnMain();
 
         mPullToRefresh.setOnRefreshListener(() -> reloadData(false));
@@ -262,6 +281,48 @@ public class MainActivity extends BaseActivity implements OnFileItemWithOptionCl
         mFileListAdapter = new FileListAdapter(this);
         mDataView.setLayoutManager(new LinearLayoutManager(this));
         mDataView.setAdapter(mFileListAdapter);
+    }
+
+    private void preloadAds() {
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mMyPdfInterstitialAd = new InterstitialAd(this);
+        mMyPdfInterstitialAd.setAdUnitId(BuildConfig.full_splash_id);
+        mMyPdfInterstitialAd.setAdListener(new AdListener() {
+            @Override
+            public void onAdLoaded() {
+                mAdsLoading = false;
+                mAdsLoaded = true;
+                super.onAdLoaded();
+            }
+
+            @Override
+            public void onAdFailedToLoad(LoadAdError adError) {
+                mAdsLoading = false;
+                mAdsLoaded = false;
+                super.onAdFailedToLoad(adError);
+            }
+
+            @Override
+            public void onAdOpened() {
+                // Code to be executed when the ad is displayed.
+                super.onAdLoaded();
+            }
+
+            @Override
+            public void onAdClicked() {
+                // Code to be executed when the user clicks on an ad.
+                super.onAdClicked();
+            }
+
+            @Override
+            public void onAdClosed() {
+                super.onAdClosed();
+            }
+        });
+
+        mAdsLoading = true;
+        mAdsLoaded = false;
+        mMyPdfInterstitialAd.loadAd(adRequest);
     }
 
     private void checkPermissionOnMain() {
@@ -309,10 +370,9 @@ public class MainActivity extends BaseActivity implements OnFileItemWithOptionCl
     }
 
     private void getFileList() {
-        mAsyncTask = new FileUtilAsyncTask(getApplication(), result -> {
-            runOnUiThread(() -> updateData(result));
-        }, mCurrentSortBy);
-        mAsyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        FileUtilAsyncTask asyncTask = new FileUtilAsyncTask(getApplication(),
+                result -> runOnUiThread(() -> updateData(result)), mCurrentSortBy);
+        asyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     private void updateData(List<FileData> fileDataList) {
@@ -358,9 +418,7 @@ public class MainActivity extends BaseActivity implements OnFileItemWithOptionCl
     }
 
     private void showPermissionIssueArea() {
-        mNoPermissionArea.setOnClickListener(v -> {
-            startRequestPermission();
-        });
+        mNoPermissionArea.setOnClickListener(v -> startRequestPermission());
         mDataArea.setVisibility(View.GONE);
         mNoDataArea.setVisibility(View.GONE);
         mNoPermissionArea.setVisibility(View.VISIBLE);
@@ -409,6 +467,27 @@ public class MainActivity extends BaseActivity implements OnFileItemWithOptionCl
 
     @Override
     public void onClickItem(int position) {
+        if (mAdsLoading || (mMyPdfInterstitialAd != null && mMyPdfInterstitialAd.isLoading())) {
+            openPdf(position);
+        } else {
+            if (mAdsLoaded && mMyPdfInterstitialAd != null && mMyPdfInterstitialAd.isLoaded()) {
+                mMyPdfInterstitialAd.setAdListener(new AdListener() {
+                    @Override
+                    public void onAdClosed() {
+                        super.onAdClosed();
+                        openPdf(position);
+                        preloadAds();
+                    }
+                });
+                mMyPdfInterstitialAd.show();
+            } else {
+                openPdf(position);
+                preloadAds();
+            }
+        }
+    }
+
+    private void openPdf(int position) {
         if (position >= 0 && position < mFileListAdapter.getFileList().size()) {
             FileData fileData = mFileListAdapter.getFileList().get(position);
 
@@ -418,53 +497,43 @@ public class MainActivity extends BaseActivity implements OnFileItemWithOptionCl
         }
     }
 
+    @SuppressLint("NonConstantResourceId")
     @Override
-    public void onOptionItem(int position) {
+    public void onOptionItem(View view, int position) {
         if (position >= 0 && position < mFileListAdapter.getFileList().size()) {
-            FileData fileData = mFileListAdapter.getFileList().get(position);
+            if (mSearchView != null) {
+                mSearchView.clearFocus();
+                CommonUtils.hideKeyboard(this);
+            }
 
-//            if (pdfOptionDialog != null && pdfOptionDialog.isVisible()) {
-//                pdfOptionDialog.dismiss();
-//            }
-//
-//            if (mSearchView != null) {
-//                mSearchView.clearFocus();
-//                CommonUtils.hideKeyboard(this);
-//            }
-//
-//            pdfOptionDialog = new PdfOptionDialog(fileData.getDisplayName(), fileData.getTimeAdded(), position, new PdfOptionDialog.FileOptionListener() {
-//                @Override
-//                public void openFile(int position) {
-//                    openPdfFile(position);
-//                }
-//
-//                @Override
-//                public void shareFile(int position) {
-//                    sharePdfFile(position);
-//                }
-//
-//                @Override
-//                public void printFile(int position) {
-//                    printPdfFile(position);
-//                }
-//
-//                @Override
-//                public void uploadFile(int position) {
-//                    uploadPdfFile(position);
-//                }
-//
-//                @Override
-//                public void renameFile(int position) {
-//                    renamePdfFile(position);
-//                }
-//
-//                @Override
-//                public void deleteFile(int position) {
-//                    deletePdfFile(position);
-//                }
-//            });
-//            pdfOptionDialog.show(getSupportFragmentManager(), pdfOptionDialog.getTag());
-//            CommonUtils.hideKeyboard(this);
+            PopupMenu popup = new PopupMenu(this, view);
+            popup.inflate(R.menu.file_option_menu);
+            popup.setOnMenuItemClickListener(item -> {
+                switch (item.getItemId()) {
+                    case R.id.menu_open_file:
+                        openPdfFile(position);
+                        return true;
+                    case R.id.menu_share_file:
+                        sharePdfFile(position);
+                        return true;
+                    case R.id.menu_print_file:
+                        printPdfFile(position);
+                        return true;
+                    case R.id.menu_upload_file:
+                        uploadPdfFile(position);
+                        return true;
+                    case R.id.menu_rename_file:
+                        renamePdfFile(position);
+                        return true;
+                    case R.id.menu_delete_file:
+                        deletePdfFile(position);
+                        return true;
+                    default:
+                        return false;
+                }
+            });
+            //displaying the popup
+            popup.show();
         }
     }
 
@@ -498,9 +567,9 @@ public class MainActivity extends BaseActivity implements OnFileItemWithOptionCl
                 if (result == -2 || result == 0) {
                     ToastUtils.showMessageShort(getApplicationContext(), getString(R.string.can_not_edit_file_name));
                 } else if (result == -1) {
-//                    SnackBarUtils.getSnackbar(MainActivity.this, getString(R.string.duplicate_video_name) + ": " + name).show();
+                    ToastUtils.showMessageShort(getApplicationContext(), getString(R.string.duplicate_video_name) + ": " + name);
                 } else {
-//                    SnackBarUtils.getSnackbar(MainActivity.this, getString(R.string.rename_file_success)).show();
+                    ToastUtils.showMessageShort(getApplicationContext(), getString(R.string.rename_file_success));
                     fileData.setFilePath(fileData.getFilePath().replace(fileData.getDisplayName(), newName));
                     fileData.setDisplayName(newName);
 
@@ -553,6 +622,11 @@ public class MainActivity extends BaseActivity implements OnFileItemWithOptionCl
 
     private void printPdfFile(int position) {
         FileData fileData = mFileListAdapter.getFileList().get(position);
+
+        if (FileUtils.getNumberPages(fileData.getFilePath()) == 0) {
+            ToastUtils.showMessageShort(this, getString(R.string.can_not_print_this_file));
+            return;
+        }
         FileUtils.printFile(this, new File(fileData.getFilePath()));
     }
 

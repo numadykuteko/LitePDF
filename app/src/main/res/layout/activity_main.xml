@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:background="@color/white_totally"
     tools:context="com.pdf.reader.lite.activity.MainActivity">
     <RelativeLayout
         android:layout_width="match_parent"
@@ -103,11 +103,9 @@
 
     </RelativeLayout>
 
-<!--    <include-->
-<!--        android:id="@+id/banner_ads"-->
-<!--        layout="@layout/layout_banner_control"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="wrap_content"-->
-
-<!--        android:layout_marginTop="@dimen/common_padding_big" />-->
+    <RelativeLayout
+        android:id="@+id/banner_ads"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginTop="@dimen/common_padding_big" />
 </LinearLayout>

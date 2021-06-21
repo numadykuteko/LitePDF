@@ -1,8 +1,8 @@
 package com.pdf.reader.lite.lib;
 
-import android.graphics.Bitmap;
+import android.widget.ImageView;
 
 public interface IShowPage {
 
-    public Bitmap showPage(int index);
+    void showPage(ImageView imageView, int index);
 }

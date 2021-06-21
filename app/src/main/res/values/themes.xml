@@ -1,9 +1,9 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <style name="Theme.LightPdf" parent="Theme.AppCompat.DayNight.DarkActionBar">
+    <style name="Theme.LightPdf" parent="Theme.AppCompat.Light.DarkActionBar">
         <item name="colorPrimary">@color/redTotally</item>
+        <item name="android:statusBarColor">@color/redTotally</item>
 
         <item name="colorAccent">@color/white_totally</item>
-        <item name="android:statusBarColor" tools:targetApi="l">@color/colorWhite</item>
     </style>
 
     <style name="AppThemeFullScreen" parent="Theme.AppCompat.Light.NoActionBar">

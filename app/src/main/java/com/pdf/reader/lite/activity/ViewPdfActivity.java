@@ -12,13 +12,16 @@ import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
 import android.graphics.pdf.PdfRenderer;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,6 +30,12 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.FileProvider;
 import androidx.viewpager.widget.ViewPager;
 
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdSize;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.LoadAdError;
+import com.pdf.reader.lite.BuildConfig;
 import com.pdf.reader.lite.R;
 import com.pdf.reader.lite.component.ConfirmDialog;
 import com.pdf.reader.lite.component.NoticeDialog;
@@ -66,7 +75,6 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
     private boolean mIsViewFull = false;
 
     private String mFilePath = null;
-    private String mFileName;
 
     private ViewPdfOption mViewOption;
     private SharedPreferences mPrefs;
@@ -82,15 +90,12 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
 
     private LinearLayout mOptionView;
     private TextView mPageInfoTextView;
-    private LinearLayout mOrientationBtnView;
     private ImageView mOrientationImage;
-    private LinearLayout mTypeBtnView;
     private ImageView mTypeImage;
 
-    private View mBannerAds;
+    private RelativeLayout mBannerAds;
 
     private PDFViewPager mPdfViewpager;
-    private PDFAdapter adapter;
 
     private ParcelFileDescriptor mFileDescriptor;
     private PdfRenderer mPdfRenderer;
@@ -110,8 +115,8 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
         String extraFilePath = getIntent().getStringExtra(EXTRA_FILE_PATH);
         if (extraFilePath != null && extraFilePath.length() > 0 && FileUtils.checkFileExist(extraFilePath)) {
             mIsFromSplash = getIntent().getBooleanExtra(EXTRA_FROM_FIRST_OPEN, false);
-            mFileName = FileUtils.getFileName(extraFilePath);
-            mNameView.setText(mFileName);
+            String fileName = FileUtils.getFileName(extraFilePath);
+            mNameView.setText(fileName);
             mFilePath = extraFilePath;
 
             if (FileUtils.getNumberPages(extraFilePath) == 0) {
@@ -155,13 +160,29 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
         mShareBtn = findViewById(R.id.toolbar_action_share);
         mLineView = findViewById(R.id.separator);
 
+        mBannerAds = findViewById(R.id.banner_ads);
+
+        AdView mAdView = new AdView(this);
+        mAdView.setAdSize(AdSize.SMART_BANNER);
+        mAdView.setAdUnitId(BuildConfig.banner_id);
+        mBannerAds.addView(mAdView);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.setAdListener(new AdListener() {
+            @Override
+            public void onAdFailedToLoad(LoadAdError loadAdError) {
+                mBannerAds.setVisibility(View.GONE);
+                super.onAdFailedToLoad(loadAdError);
+            }
+        });
+        mAdView.loadAd(adRequest);
+
         mViewContainer = findViewById(R.id.pdf_view_container);
 
         mOptionView = findViewById(R.id.option_view);
         mPageInfoTextView = findViewById(R.id.page_info);
-        mOrientationBtnView = findViewById(R.id.option_view_orientation);
+        LinearLayout orientationBtnView = findViewById(R.id.option_view_orientation);
         mOrientationImage = findViewById(R.id.option_view_orientation_img);
-        mTypeBtnView = findViewById(R.id.option_view_mode);
+        LinearLayout typeBtnView = findViewById(R.id.option_view_mode);
         mTypeImage = findViewById(R.id.option_view_mode_img);
 
         mIsViewFull = false;
@@ -175,7 +196,7 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
         });
 
         setForViewType(true);
-        mTypeBtnView.setOnClickListener(v -> {
+        typeBtnView.setOnClickListener(v -> {
             if (mViewOption.getViewMode() == VIEW_MODE_DAY) {
                 mViewOption.setViewMode(VIEW_MODE_NIGHT);
                 ToastUtils.showMessageShort(getApplicationContext(), "Changed to night mode");
@@ -189,7 +210,7 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
         });
 
         setForOrientation();
-        mOrientationBtnView.setOnClickListener(v -> {
+        orientationBtnView.setOnClickListener(v -> {
             if (mViewOption.getOrientation() == VIEW_ORIENTATION_VERTICAL) {
                 mViewOption.setOrientation(VIEW_ORIENTATION_HORIZONTAL);
                 ToastUtils.showMessageShort(getApplicationContext(), "Changed to horizontal mode");
@@ -200,9 +221,7 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
             setForOrientation();
         });
 
-        mBackBtn.setOnClickListener(v -> {
-            onBackPressed();
-        });
+        mBackBtn.setOnClickListener(v -> onBackPressed());
 
         mShareBtn.setOnClickListener(v -> {
             if (mFilePath != null) {
@@ -219,7 +238,7 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
             getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         } else {
             mToolBar.setVisibility(View.VISIBLE);
-//            mBannerAds.setVisibility(View.VISIBLE);
+            mBannerAds.setVisibility(View.VISIBLE);
             mOptionView.setVisibility(View.VISIBLE);
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         }
@@ -251,8 +270,8 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
             mTypeImage.setImageDrawable(getDrawable(R.drawable.ic_view_night_mode));
         }
 
-        if (!isFirstTime) {
-            setUpViewPager();
+        if (mPdfViewpager != null) {
+            setupPdfViewer();
         }
     }
 
@@ -264,7 +283,7 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
             mOrientationImage.setImageDrawable(getDrawable(R.drawable.ic_view_vertical));
         }
         if (mPdfViewpager != null) {
-            mPdfViewpager.setSwipeOrientation(mViewOption.getOrientation());
+            setupPdfViewer();
         }
     }
 
@@ -368,12 +387,8 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
     }
 
     private void showErrorDialog() {
-        NoticeDialog noticeDialog = new NoticeDialog(this, "Error message", "File is not valid. Please try again later.", "Exit", new NoticeDialog.ConfirmListener() {
-            @Override
-            public void onSubmit() {
-                onBackPressed();
-            }
-        });
+        NoticeDialog noticeDialog = new NoticeDialog(this, "Error message", "File is not valid. Please try again later.", "Exit",
+                this::onBackPressed);
         noticeDialog.setCancelable(false);
         noticeDialog.setCanceledOnTouchOutside(false);
         noticeDialog.show();
@@ -399,7 +414,7 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
 
         mPdfViewpager = findViewById(R.id.pdfviewfpager);
         mPdfViewpager.setSwipeOrientation(mViewOption.getOrientation());
-        mPdfViewpager.setOffscreenPageLimit(3);
+        mPdfViewpager.setOffscreenPageLimit(2);
 
         mPageIndex = 0;
         // If there is a savedInstanceState (screen orientations, etc.), we restore the page index.
@@ -427,7 +442,7 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
 
     @SuppressLint("SetTextI18n")
     private void setUpViewPager() {
-        adapter = new PDFAdapter(this, this, mPdfRenderer.getPageCount(), mViewOption.getViewMode());
+        PDFAdapter adapter = new PDFAdapter(this, this, mPdfRenderer.getPageCount(), mViewOption.getViewMode());
         mPdfViewpager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
@@ -453,7 +468,7 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {
+    public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         if (null != mCurrentPage) {
             outState.putInt(STATE_CURRENT_PAGE_INDEX, mCurrentPage.getIndex());
@@ -487,12 +502,12 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
             mFileDescriptor.close();
     }
 
-    private Bitmap toRightBitmap() {
-
-        Bitmap bitmap = Bitmap.createBitmap(mCurrentPage.getWidth(), mCurrentPage.getHeight(),
-                Bitmap.Config.ARGB_8888);
-
+    private Bitmap toRightBitmap(int index) {
         try {
+            mCurrentPage = mPdfRenderer.openPage(index);
+            Bitmap bitmap = Bitmap.createBitmap(mCurrentPage.getWidth(), mCurrentPage.getHeight(),
+                    Bitmap.Config.ARGB_8888);
+
             mCurrentPage.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
 
             if (mViewOption.getViewMode() == VIEW_MODE_DAY) {
@@ -525,29 +540,52 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
 
             return nightModeBitmap;
         } catch (Exception e) {
-            return bitmap;
+            return null;
         }
     }
 
     @SuppressLint("SetTextI18n")
     @Override
-    public Bitmap showPage(int index) {
+    public void showPage(ImageView imageView, int index) {
         try {
             if (mPdfRenderer.getPageCount() <= index) {
-                return null;
+                return;
             }
-            // Make sure to close the current page before opening another one.
-            if (null != mCurrentPage) {
-                mCurrentPage.close();
-            }
-            // Use `openPage` to open a specific page in PDF.
-            mCurrentPage = mPdfRenderer.openPage(index);
-            // Important: the destination bitmap must be ARGB (not RGB).
 
-            return toRightBitmap();
-        } catch (Exception e) {
-            return Bitmap.createBitmap(mCurrentPage.getWidth(), mCurrentPage.getHeight(),
-                    Bitmap.Config.ARGB_8888);
+            // Make sure to close the current page before opening another one.
+            try {
+                if (null != mCurrentPage) {
+                    mCurrentPage.close();
+                }
+            } catch (Exception e) {
+            }
+
+            AsyncTask asyncTask = new AsyncTask() {
+                @Override
+                protected Object doInBackground(Object[] objects) {
+                    checkGetBitmap(imageView, index);
+
+                    return null;
+                }
+            };
+
+            asyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+
+        } catch (Exception ignored) {
+        }
+    }
+
+    private void checkGetBitmap(ImageView imageView, int index) {
+        Bitmap bitmap = toRightBitmap(index);
+        if (bitmap != null) {
+            runOnUiThread(() -> {
+                imageView.setImageBitmap(bitmap);
+                imageView.setVisibility(View.VISIBLE);
+            });
+        } else {
+            if (mCurrentPage.getIndex() == index) {
+                checkGetBitmap(imageView, index);
+            }
         }
     }
 }
