@@ -34,6 +34,7 @@ import com.google.android.gms.ads.LoadAdError;
 import com.pdf.reader.lite.BuildConfig;
 import com.pdf.reader.lite.R;
 import com.pdf.reader.lite.component.ConfirmDialog;
+import com.pdf.reader.lite.component.ExitConfirmDialog;
 import com.pdf.reader.lite.component.RenameFileDialog;
 import com.pdf.reader.lite.component.SettingSortDialog;
 import com.pdf.reader.lite.data.FileData;
@@ -125,6 +126,22 @@ public class MainActivity extends BaseActivity implements OnFileItemWithOptionCl
         });
 
         return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public void onBackPressed() {
+        ExitConfirmDialog exitConfirmDialog = new ExitConfirmDialog(this, new ExitConfirmDialog.ConfirmListener() {
+            @Override
+            public void onSubmit() {
+                MainActivity.super.onBackPressed();
+            }
+
+            @Override
+            public void onCancel() {
+
+            }
+        });
+        exitConfirmDialog.show();
     }
 
     @SuppressLint("NonConstantResourceId")

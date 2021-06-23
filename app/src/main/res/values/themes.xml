@@ -3,7 +3,7 @@
         <item name="colorPrimary">@color/redTotally</item>
         <item name="android:statusBarColor">@color/redTotally</item>
 
-        <item name="colorAccent">@color/white_totally</item>
+        <item name="colorAccent">@color/blackHaft</item>
     </style>
 
     <style name="AppThemeFullScreen" parent="Theme.AppCompat.Light.NoActionBar">
@@ -12,6 +12,22 @@
         <item name="colorAccent">@color/white_totally</item>
         <item name="android:statusBarColor" tools:targetApi="l">@color/redTotally</item>
         <item name="android:windowTranslucentStatus">true</item>
+    </style>
+
+    <style name="AppTheme.Ads" parent="@style/Theme.LightPdf">
+        <item name="android:textSize">11.0sp</item>
+        <item name="android:textColor">#ffffff</item>
+        <item name="android:gravity">center</item>
+        <item name="android:layout_gravity">left</item>
+        <item name="android:background">@drawable/ads_icon</item>
+        <item name="android:paddingLeft">3.0dip</item>
+        <item name="android:paddingRight">6.0dip</item>
+        <item name="android:paddingBottom">1.0dip</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minWidth">15.0px</item>
+        <item name="android:minHeight">15.0px</item>
+        <item name="android:text">Ad</item>
     </style>
 
     <style name="sheet_dialog_style">

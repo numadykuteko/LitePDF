@@ -1,6 +1,7 @@
 package com.pdf.reader.lite.activity;
 
 import android.annotation.SuppressLint;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -17,6 +18,7 @@ import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
@@ -44,6 +46,9 @@ import com.pdf.reader.lite.lib.IShowPage;
 import com.pdf.reader.lite.lib.PDFAdapter;
 import com.pdf.reader.lite.lib.PDFViewPager;
 import com.pdf.reader.lite.utils.ColorUtils;
+import com.pdf.reader.lite.utils.rate.OnCallback;
+import com.pdf.reader.lite.utils.rate.RateAppDialog;
+import com.pdf.reader.lite.utils.rate.RateUtils;
 import com.pdf.reader.lite.utils.ToastUtils;
 import com.pdf.reader.lite.utils.file.FileUtils;
 
@@ -135,6 +140,53 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
         if (mIsViewFull) {
             mIsViewFull = false;
             setForFullView();
+            return;
+        } else if (!RateUtils.isUserRated(this)) {
+            RateAppDialog rateApp2Dialog = new RateAppDialog(this);
+            rateApp2Dialog.setCallback(new OnCallback() {
+                @Override
+                public void onMaybeLater() {
+                    if (mIsFromSplash) {
+                        Intent intent = new Intent(ViewPdfActivity.this, MainActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        startActivity(intent);
+                        finish();
+                    } else {
+                        ViewPdfActivity.super.onBackPressed();
+                    }
+                }
+
+                @Override
+                public void onSubmit(String review) {
+                    ToastUtils.showMessageShort(getApplicationContext(), "Thank you for your rating");
+                    RateUtils.setRateDone(getApplicationContext());
+                }
+
+                @Override
+                public void onRate() {
+                    RateUtils.setRateDone(getApplicationContext());
+                    final String appPackageName = getPackageName();
+                    try {
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
+                    } catch (ActivityNotFoundException anfe) {
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
+                    } catch (Exception e) {
+                        ToastUtils.showMessageShort(getApplicationContext(), "Thank you for your rating");
+                    }
+
+                    if (mIsFromSplash) {
+                        Intent intent = new Intent(ViewPdfActivity.this, MainActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        startActivity(intent);
+                        finish();
+                    } else {
+                        ViewPdfActivity.super.onBackPressed();
+                    }
+                }
+            });
+            rateApp2Dialog.show();
             return;
         } else if (mIsFromSplash) {
             Intent intent = new Intent(ViewPdfActivity.this, MainActivity.class);
@@ -259,6 +311,7 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
         mPageInfoTextView.setTextColor(getViewTextColor());
 
         mOrientationImage.setColorFilter(getIconColor(), android.graphics.PorterDuff.Mode.MULTIPLY);
+        mTypeImage.setColorFilter(getIconColor(), android.graphics.PorterDuff.Mode.MULTIPLY);
         Window window = getWindow();
         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
@@ -333,21 +386,15 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
     }
 
     private void suggestDownloadFullApp() {
-        ConfirmDialog confirmDialog = new ConfirmDialog(this, "App not support", "Sorry we can not open this file. Would you like to try with full function application?", new ConfirmDialog.ConfirmListener() {
+        NoticeDialog noticeDialog = new NoticeDialog(this, "App not support", "Sorry we can not open this file. This file may be interrupted or encrypted.", "Exit", new NoticeDialog.ConfirmListener() {
             @Override
             public void onSubmit() {
-                openByFullApp();
-                onBackPressed();
-            }
-
-            @Override
-            public void onCancel() {
-                onBackPressed();
+                ViewPdfActivity.super.onBackPressed();
             }
         });
-        confirmDialog.setCancelable(false);
-        confirmDialog.setCanceledOnTouchOutside(false);
-        confirmDialog.show();
+        noticeDialog.setCancelable(false);
+        noticeDialog.setCanceledOnTouchOutside(false);
+        noticeDialog.show();
     }
 
     private void openByFullApp() {
@@ -504,6 +551,14 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
 
     private Bitmap toRightBitmap(int index) {
         try {
+            // Make sure to close the current page before opening another one.
+            try {
+                if (null != mCurrentPage) {
+                    mCurrentPage.close();
+                }
+            } catch (Exception e) {
+            }
+
             mCurrentPage = mPdfRenderer.openPage(index);
             Bitmap bitmap = Bitmap.createBitmap(mCurrentPage.getWidth(), mCurrentPage.getHeight(),
                     Bitmap.Config.ARGB_8888);
@@ -540,52 +595,54 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
 
             return nightModeBitmap;
         } catch (Exception e) {
+            Log.d("duynm", e.getMessage());
             return null;
         }
     }
 
     @SuppressLint("SetTextI18n")
     @Override
-    public void showPage(ImageView imageView, int index) {
+    public void showPage(ViewGroup container, ImageView imageView, LinearLayout reloadView, int index) {
         try {
             if (mPdfRenderer.getPageCount() <= index) {
                 return;
             }
 
-            // Make sure to close the current page before opening another one.
-            try {
-                if (null != mCurrentPage) {
-                    mCurrentPage.close();
-                }
-            } catch (Exception e) {
-            }
-
             AsyncTask asyncTask = new AsyncTask() {
                 @Override
                 protected Object doInBackground(Object[] objects) {
-                    checkGetBitmap(imageView, index);
+                    checkGetBitmap(container, imageView, reloadView, index);
 
                     return null;
                 }
             };
 
-            asyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            asyncTask.execute();
 
         } catch (Exception ignored) {
         }
     }
 
-    private void checkGetBitmap(ImageView imageView, int index) {
+    private void checkGetBitmap(ViewGroup container, ImageView imageView, LinearLayout reloadView, int index) {
         Bitmap bitmap = toRightBitmap(index);
+
         if (bitmap != null) {
             runOnUiThread(() -> {
                 imageView.setImageBitmap(bitmap);
                 imageView.setVisibility(View.VISIBLE);
+                reloadView.setVisibility(View.GONE);
+                reloadView.setOnClickListener(view -> {
+                });
             });
         } else {
-            if (mCurrentPage.getIndex() == index) {
-                checkGetBitmap(imageView, index);
-            }
+            runOnUiThread(() -> {
+                reloadView.setVisibility(View.VISIBLE);
+                imageView.setVisibility(View.GONE);
+                reloadView.setOnClickListener(view -> {
+                    reloadView.setVisibility(View.GONE);
+                    checkGetBitmap(container, imageView, reloadView, index);
+                });
+            });
         }
     }
 }

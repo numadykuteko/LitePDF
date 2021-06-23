@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
 import androidx.viewpager.widget.PagerAdapter;
@@ -41,14 +42,17 @@ public class PDFAdapter extends PagerAdapter {
         if (inflater != null) {
             itemView = inflater.inflate(R.layout.each_page, container, false);
             PDFZoomImageView imageView = (PDFZoomImageView ) itemView.findViewById(R.id.image);
-            Log.d("duynm", position + " - loading");
+            LinearLayout reloadView = (LinearLayout) itemView.findViewById(R.id.reload);
+
             if (viewMode == 1) {
                 imageView.setBackgroundColor(ColorUtils.getColorFromResource(context, R.color.black_totally));
             } else {
                 imageView.setBackgroundColor(ColorUtils.getColorFromResource(context, R.color.white));
             }
             imageView.setVisibility(View.GONE);
-            listener.showPage(imageView, position);
+            reloadView.setVisibility(View.GONE);
+
+            listener.showPage(container, imageView, reloadView, position);
             container.addView(itemView);
 
             return itemView;

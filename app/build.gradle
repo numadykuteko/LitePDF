@@ -38,6 +38,7 @@ android {
             signingConfig signingConfigs.release
 
             buildConfigField('String', 'banner_id', '"ca-app-pub-3940256099942544/6300978111"')
+            buildConfigField('String', 'native_id', '"ca-app-pub-3940256099942544/2247696110"')
             buildConfigField('String', 'full_my_pdf_id', '"ca-app-pub-3940256099942544/1033173712"')
             buildConfigField('String', 'full_splash_id', '"ca-app-pub-3940256099942544/1033173712"')
             resValue "string", "app_id", "ca-app-pub-3940256099942544~3347511713"
@@ -51,6 +52,7 @@ android {
             signingConfig signingConfigs.release
 
             buildConfigField('String', 'banner_id', '"ca-app-pub-3940256099942544/6300978111"')
+            buildConfigField('String', 'native_id', '"ca-app-pub-3940256099942544/2247696110"')
             buildConfigField('String', 'full_my_pdf_id', '"ca-app-pub-3940256099942544/1033173712"')
             buildConfigField('String', 'full_splash_id', '"ca-app-pub-3940256099942544/1033173712"')
             resValue "string", "app_id", "ca-app-pub-3940256099942544~3347511713"
@@ -77,4 +79,6 @@ dependencies {
 
     // ads
     implementation 'com.google.android.gms:play-services-ads-lite:19.7.0'
+
+    implementation 'com.github.yangmbin:RatingBar:1.0.0'
 }

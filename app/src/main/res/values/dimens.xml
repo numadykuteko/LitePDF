@@ -30,4 +30,7 @@
     <dimen name="center_image_size">150dp</dimen>
     <dimen name="big_button_height">50dp</dimen>
     <dimen name="big_button_width">260dp</dimen>
+
+    <dimen name="height_native_ads">280dip</dimen>
+
 </resources>

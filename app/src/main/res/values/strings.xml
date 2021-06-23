@@ -39,6 +39,9 @@
     <string name="rename_file_success">Rename file success</string>
     <string name="delete_success_text">Delete success…</string>
 
+    <string name="exit_view_file">Exit confirm</string>
+    <string name="exit_view_file_question">Are you sure you want to exit application?</string>
+
     <string name="full_detail_file">%s • %s</string>
 
 </resources>
