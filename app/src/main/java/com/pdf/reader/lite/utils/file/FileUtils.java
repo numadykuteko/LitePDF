@@ -53,8 +53,9 @@ public class FileUtils {
 
     @SuppressLint("DefaultLocale")
     public static String getFormattedSize(int size) {
-        int kb = size / 1024;
-        if (kb < 100) {
+        if (size < 100) {
+            return String.format("%.2f B", (double) size);
+        } if (size / 1024 < 100) {
             return String.format("%.2f KB", (double) size / (1024));
         } else {
             return String.format("%.2f MB", (double) size / (1024 * 1024));
@@ -137,7 +138,12 @@ public class FileUtils {
             try {
                 File file = new File(filePath);
                 Uri uri = Uri.fromFile(file);
-                int size = Integer.parseInt(String.valueOf(file.length()/1024));
+                int size;
+                try {
+                    size = Integer.parseInt(String.valueOf(file.length()));
+                } catch (Exception e) {
+                    size = 1;
+                }
 
                 FileData fileData = new FileData(getFileName(filePath), filePath, uri, (int) (file.lastModified() / 1000), size);
                 resultList.add(fileData);
@@ -230,7 +236,9 @@ public class FileUtils {
                 renderer.close();
                 return numberPage;
             }
-        } catch (Exception ignored) {}
+        } catch (OutOfMemoryError | Exception ignored) {
+
+        }
 
         return 0;
     }

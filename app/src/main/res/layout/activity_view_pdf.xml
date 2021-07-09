@@ -5,14 +5,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white_totally"
-    tools:context="com.pdf.reader.lite.activity.ViewPdfActivity">
+    tools:context=".activity.ViewPdfActivity">
 
-    <LinearLayout
+    <FrameLayout
         android:id="@+id/pdf_view_container"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@id/option_view"
+        app:layout_constraintBottom_toTopOf="@id/banner_ads"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
@@ -23,15 +23,22 @@
             android:id="@+id/pdfviewfpager"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:clickable="false" />
+            android:clickable="false"
+            android:visibility="gone"/>
 
-    </LinearLayout>
+        <com.pdfview.PDFView
+            android:id="@+id/pdfviewscroll"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"/>
+
+    </FrameLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/layout_toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/gntRed"
+        android:background="@color/redTotally"
         tools:ignore="UseCompoundDrawables, ContentDescription"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent">
@@ -72,17 +79,20 @@
             android:id="@+id/toolbar_name_tv"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textSize="@dimen/title_second_component_text_size"
-            android:textStyle="bold"
             android:layout_marginStart="@dimen/common_padding_big"
             android:layout_marginEnd="@dimen/common_padding_big"
             android:maxLines="1"
+            android:ellipsize="end"
             android:textColor="@color/white_totally"
-            tools:text="Sample PDF File.pdf"
+            android:textSize="@dimen/title_second_component_text_size"
+            android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/toolbar_btn_back"
             app:layout_constraintEnd_toStartOf="@id/toolbar_action_full_screen"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toEndOf="@id/toolbar_btn_back"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.47"
+            tools:text="Sample PDF File.pdf" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -95,70 +105,10 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/layout_toolbar"/>
 
-    <LinearLayout
-        android:id="@+id/option_view"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:orientation="horizontal"
-        android:weightSum="3"
-        android:background="@color/black"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/pdf_view_container"
-        app:layout_constraintBottom_toTopOf="@id/banner_ads">
-        <LinearLayout
-            android:id="@+id/option_view_orientation"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:layout_gravity="center"
-            android:gravity="center"
-            android:foreground="?attr/selectableItemBackground">
-            <ImageView
-                android:id="@+id/option_view_orientation_img"
-                android:layout_width="25dp"
-                android:layout_height="25dp"
-                android:src="@drawable/ic_view_horizontal"
-                android:layout_gravity="center"/>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:layout_gravity="center"
-            android:orientation="vertical">
-            <TextView
-                android:id="@+id/page_info"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:textColor="@color/white_totally"
-                android:textSize="@dimen/title_first_component_text_size"
-                android:gravity="center"
-                android:textStyle="bold"/>
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/option_view_mode"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:layout_gravity="center"
-            android:gravity="center"
-            android:foreground="?attr/selectableItemBackground">
-            <ImageView
-                android:id="@+id/option_view_mode_img"
-                android:layout_width="25dp"
-                android:layout_height="25dp"
-                android:src="@drawable/ic_view_day_mode"
-                android:layout_gravity="center"/>
-        </LinearLayout>
-    </LinearLayout>
-
     <RelativeLayout
         android:id="@+id/banner_ads"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:layout_marginTop="@dimen/activity_horizontal_margin"
         app:layout_constraintBottom_toBottomOf="parent"
 
         app:layout_constraintStart_toStartOf="parent" />

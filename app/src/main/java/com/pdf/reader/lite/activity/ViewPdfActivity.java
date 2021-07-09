@@ -2,15 +2,9 @@ package com.pdf.reader.lite.activity;
 
 import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.ColorMatrix;
-import android.graphics.ColorMatrixColorFilter;
-import android.graphics.Paint;
 import android.graphics.pdf.PdfRenderer;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -19,7 +13,6 @@ import android.os.ParcelFileDescriptor;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -40,20 +33,23 @@ import com.google.android.gms.ads.LoadAdError;
 import com.pdf.reader.lite.BuildConfig;
 import com.pdf.reader.lite.R;
 import com.pdf.reader.lite.component.ConfirmDialog;
+import com.pdf.reader.lite.component.LoadingDialog;
 import com.pdf.reader.lite.component.NoticeDialog;
-import com.pdf.reader.lite.data.ViewPdfOption;
 import com.pdf.reader.lite.lib.IShowPage;
 import com.pdf.reader.lite.lib.PDFAdapter;
 import com.pdf.reader.lite.lib.PDFViewPager;
-import com.pdf.reader.lite.utils.ColorUtils;
+import com.pdf.reader.lite.utils.FirebaseRemoteUtils;
+import com.pdf.reader.lite.utils.ToastUtils;
+import com.pdf.reader.lite.utils.file.FileUtils;
 import com.pdf.reader.lite.utils.rate.OnCallback;
 import com.pdf.reader.lite.utils.rate.RateAppDialog;
 import com.pdf.reader.lite.utils.rate.RateUtils;
-import com.pdf.reader.lite.utils.ToastUtils;
-import com.pdf.reader.lite.utils.file.FileUtils;
+import com.pdfview.PDFView;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import static com.pdf.reader.lite.utils.file.FileUtils.AUTHORITY_APP;
 
@@ -63,50 +59,32 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
     public static final String EXTRA_FROM_FIRST_OPEN = "EXTRA_FROM_FIRST_OPEN";
 
     private static final int REQUEST_EXTERNAL_PERMISSION_FOR_OPEN_LOCAL_FILE = 2;
-    private static final String STATE_CURRENT_PAGE_INDEX = "current_page_index";
-
-    private static final String PREF_NAME_VIEW_MODE_PDF = "PREF_NAME_VIEW_MODE_PDF";
-    private static final String PREF_NAME_VIEW_ORIENTATION_PDF = "PREF_NAME_VIEW_ORIENTATION_PDF";
-    private static final String PREF_NAME = "pdf_reader_application";
-
-    private static final String FULL_APP_PACKAGE = "com.pdfreader.scanner.pdfviewer";
-
-    private static final int VIEW_MODE_DAY = 0;
-    private static final int VIEW_MODE_NIGHT = 1;
-    private static final int VIEW_ORIENTATION_HORIZONTAL = 0;
-    private static final int VIEW_ORIENTATION_VERTICAL = 1;
 
     private boolean mIsFromSplash = false;
-    private boolean mIsViewFull = false;
 
     private String mFilePath = null;
-
-    private ViewPdfOption mViewOption;
-    private SharedPreferences mPrefs;
 
     private ConstraintLayout mToolBar;
     private ImageView mBackBtn;
     private TextView mNameView;
     private ImageView mFullScreenBtn;
     private ImageView mShareBtn;
-    private View mLineView;
 
-    private LinearLayout mViewContainer;
-
-    private LinearLayout mOptionView;
-    private TextView mPageInfoTextView;
-    private ImageView mOrientationImage;
-    private ImageView mTypeImage;
+    private boolean mIsViewFull = false;
+    private boolean mLoadAdsDone = true;
 
     private RelativeLayout mBannerAds;
 
     private PDFViewPager mPdfViewpager;
+    private PDFView mPdfViewScroll;
 
     private ParcelFileDescriptor mFileDescriptor;
     private PdfRenderer mPdfRenderer;
     private PdfRenderer.Page mCurrentPage;
     private int mPageIndex;
     private Bundle savedBundle;
+
+    private static final String STATE_CURRENT_PAGE_INDEX = "current_page_index";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -161,6 +139,7 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
                 public void onSubmit(String review) {
                     ToastUtils.showMessageShort(getApplicationContext(), "Thank you for your rating");
                     RateUtils.setRateDone(getApplicationContext());
+                    ViewPdfActivity.super.onBackPressed();
                 }
 
                 @Override
@@ -202,15 +181,11 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
 
     @SuppressLint("CutPasteId")
     private void initView() {
-
-        getOldViewOption();
-
         mToolBar = findViewById(R.id.layout_toolbar);
         mBackBtn = findViewById(R.id.toolbar_btn_back);
         mNameView = findViewById(R.id.toolbar_name_tv);
         mFullScreenBtn = findViewById(R.id.toolbar_action_full_screen);
         mShareBtn = findViewById(R.id.toolbar_action_share);
-        mLineView = findViewById(R.id.separator);
 
         mBannerAds = findViewById(R.id.banner_ads);
 
@@ -223,19 +198,11 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
             @Override
             public void onAdFailedToLoad(LoadAdError loadAdError) {
                 mBannerAds.setVisibility(View.GONE);
+                mLoadAdsDone = false;
                 super.onAdFailedToLoad(loadAdError);
             }
         });
         mAdView.loadAd(adRequest);
-
-        mViewContainer = findViewById(R.id.pdf_view_container);
-
-        mOptionView = findViewById(R.id.option_view);
-        mPageInfoTextView = findViewById(R.id.page_info);
-        LinearLayout orientationBtnView = findViewById(R.id.option_view_orientation);
-        mOrientationImage = findViewById(R.id.option_view_orientation_img);
-        LinearLayout typeBtnView = findViewById(R.id.option_view_mode);
-        mTypeImage = findViewById(R.id.option_view_mode_img);
 
         mIsViewFull = false;
         setForFullView();
@@ -247,32 +214,6 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
             setForFullView();
         });
 
-        setForViewType(true);
-        typeBtnView.setOnClickListener(v -> {
-            if (mViewOption.getViewMode() == VIEW_MODE_DAY) {
-                mViewOption.setViewMode(VIEW_MODE_NIGHT);
-                ToastUtils.showMessageShort(getApplicationContext(), "Changed to night mode");
-            } else {
-                mViewOption.setViewMode(VIEW_MODE_DAY);
-                ToastUtils.showMessageShort(getApplicationContext(), "Changed to day mode");
-            }
-
-            setForViewType(false);
-            saveOldViewOption();
-        });
-
-        setForOrientation();
-        orientationBtnView.setOnClickListener(v -> {
-            if (mViewOption.getOrientation() == VIEW_ORIENTATION_VERTICAL) {
-                mViewOption.setOrientation(VIEW_ORIENTATION_HORIZONTAL);
-                ToastUtils.showMessageShort(getApplicationContext(), "Changed to horizontal mode");
-            } else {
-                mViewOption.setOrientation(VIEW_ORIENTATION_VERTICAL);
-                ToastUtils.showMessageShort(getApplicationContext(), "Changed to vertical mode");
-            }
-            setForOrientation();
-        });
-
         mBackBtn.setOnClickListener(v -> onBackPressed());
 
         mShareBtn.setOnClickListener(v -> {
@@ -282,123 +223,10 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
         });
     }
 
-    private void setForFullView() {
-        if (mIsViewFull) {
-            mToolBar.setVisibility(View.GONE);
-            mBannerAds.setVisibility(View.GONE);
-            mOptionView.setVisibility(View.GONE);
-            getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        } else {
-            mToolBar.setVisibility(View.VISIBLE);
-            mBannerAds.setVisibility(View.VISIBLE);
-            mOptionView.setVisibility(View.VISIBLE);
-            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        }
-    }
-
-    @SuppressLint("UseCompatLoadingForDrawables")
-    private void setForViewType(boolean isFirstTime) {
-        mToolBar.setBackgroundColor(getViewOptionColor());
-        mBackBtn.setColorFilter(getIconColor(), android.graphics.PorterDuff.Mode.MULTIPLY);
-        mFullScreenBtn.setColorFilter(getIconColor(), android.graphics.PorterDuff.Mode.MULTIPLY);
-        mShareBtn.setColorFilter(getIconColor(), android.graphics.PorterDuff.Mode.MULTIPLY);
-        mNameView.setTextColor(getViewTextColor());
-        mLineView.setBackgroundColor(getViewTextColor());
-
-        mViewContainer.setBackgroundColor(getViewPdfContainerColor());
-
-        mOptionView.setBackgroundColor(getViewOptionColor());
-        mPageInfoTextView.setTextColor(getViewTextColor());
-
-        mOrientationImage.setColorFilter(getIconColor(), android.graphics.PorterDuff.Mode.MULTIPLY);
-        mTypeImage.setColorFilter(getIconColor(), android.graphics.PorterDuff.Mode.MULTIPLY);
-        Window window = getWindow();
-        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-        window.setStatusBarColor(getViewOptionColor());
-
-        if (mViewOption.getViewMode() == VIEW_MODE_DAY) {
-            mTypeImage.setImageDrawable(getDrawable(R.drawable.ic_view_day_mode));
-        } else {
-            mTypeImage.setImageDrawable(getDrawable(R.drawable.ic_view_night_mode));
-        }
-
-        if (mPdfViewpager != null) {
-            setupPdfViewer();
-        }
-    }
-
-    @SuppressLint("UseCompatLoadingForDrawables")
-    private void setForOrientation() {
-        if (mViewOption.getOrientation() == VIEW_ORIENTATION_HORIZONTAL) {
-            mOrientationImage.setImageDrawable(getDrawable(R.drawable.ic_view_horizontal));
-        } else {
-            mOrientationImage.setImageDrawable(getDrawable(R.drawable.ic_view_vertical));
-        }
-        if (mPdfViewpager != null) {
-            setupPdfViewer();
-        }
-    }
-
-    private int getIconColor() {
-        if (mViewOption.getViewMode() == VIEW_MODE_DAY) {
-            return ColorUtils.getColorFromResource(this, R.color.icon_type_day_mode);
-        } else {
-            return ColorUtils.getColorFromResource(this, R.color.icon_type_night_mode);
-        }
-    }
-
-    private int getViewPdfContainerColor() {
-        if (mViewOption.getViewMode() == VIEW_MODE_DAY) {
-            return ColorUtils.getColorFromResource(this, R.color.background_type_day_mode);
-        } else {
-            return ColorUtils.getColorFromResource(this, R.color.background_type_night_mode);
-        }
-    }
-
-    private int getViewOptionColor() {
-        if (mViewOption.getViewMode() == VIEW_MODE_DAY) {
-            return ColorUtils.getColorFromResource(this, R.color.option_view_type_day_mode);
-        } else {
-            return ColorUtils.getColorFromResource(this, R.color.option_view_type_night_mode);
-        }
-    }
-
-    private int getViewTextColor() {
-        if (mViewOption.getViewMode() == VIEW_MODE_DAY) {
-            return ColorUtils.getColorFromResource(this, R.color.text_type_day_mode);
-        } else {
-            return ColorUtils.getColorFromResource(this, R.color.text_type_night_mode);
-        }
-    }
-
-    private void getOldViewOption() {
-        mPrefs = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        int oldViewType = mPrefs.getInt(PREF_NAME_VIEW_MODE_PDF, VIEW_MODE_DAY);
-        int oldViewOrientation = mPrefs.getInt(PREF_NAME_VIEW_ORIENTATION_PDF, VIEW_ORIENTATION_VERTICAL);
-        mViewOption = new ViewPdfOption(oldViewType, oldViewOrientation);
-    }
-
-    private void saveOldViewOption() {
-        mPrefs = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        mPrefs.edit().putInt(PREF_NAME_VIEW_MODE_PDF, mViewOption.getViewMode()).apply();
-        mPrefs.edit().putInt(PREF_NAME_VIEW_ORIENTATION_PDF, mViewOption.getOrientation()).apply();
-    }
-
-    private void suggestDownloadFullApp() {
-        NoticeDialog noticeDialog = new NoticeDialog(this, "App not support", "Sorry we can not open this file. This file may be interrupted or encrypted.", "Exit", new NoticeDialog.ConfirmListener() {
-            @Override
-            public void onSubmit() {
-                ViewPdfActivity.super.onBackPressed();
-            }
-        });
-        noticeDialog.setCancelable(false);
-        noticeDialog.setCanceledOnTouchOutside(false);
-        noticeDialog.show();
-    }
-
     private void openByFullApp() {
-        if (isAppAvailable()) {
+        FirebaseRemoteUtils firebaseRemoteUtils = new FirebaseRemoteUtils();
+        String fullAppPackage = firebaseRemoteUtils.getFullAppPackage();
+        if (isAppAvailable(fullAppPackage)) {
             File file = new File(mFilePath);
             Intent target = new Intent(Intent.ACTION_VIEW);
             target.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
@@ -407,13 +235,13 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
 
                 target.setDataAndType(uri, "application/pdf");
                 target.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                target.setPackage(FULL_APP_PACKAGE);
+                target.setPackage(fullAppPackage);
                 startActivity(Intent.createChooser(target, "Open file"));
             } catch (Exception e) {
                 ToastUtils.showMessageShort(this, "Sorry we can't open this file now");
             }
         } else {
-            Uri uri = Uri.parse("market://details?id=" + FULL_APP_PACKAGE);
+            Uri uri = Uri.parse("market://details?id=" + fullAppPackage);
             Intent goToMarket = new Intent(Intent.ACTION_VIEW, uri);
             try {
                 startActivity(goToMarket);
@@ -423,19 +251,51 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
         }
     }
 
-    private boolean isAppAvailable() {
+    private boolean isAppAvailable(String packageName) {
         PackageManager pm = getPackageManager();
         try {
-            pm.getPackageInfo(FULL_APP_PACKAGE, PackageManager.GET_ACTIVITIES);
+            pm.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES);
             return true;
         } catch (Exception e) {
             return false;
         }
     }
 
+    private void setForFullView() {
+        if (mIsViewFull) {
+            mToolBar.setVisibility(View.GONE);
+            mBannerAds.setVisibility(View.GONE);
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        } else {
+            mToolBar.setVisibility(View.VISIBLE);
+            if (mLoadAdsDone) {
+                mBannerAds.setVisibility(View.VISIBLE);
+            }
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        }
+    }
+
+    private void suggestDownloadFullApp() {
+        ConfirmDialog confirmDialog = new ConfirmDialog(this, "App not support", "Sorry we can not open this file. Would you like to try with full function application?", new ConfirmDialog.ConfirmListener() {
+            @Override
+            public void onSubmit() {
+                openByFullApp();
+                ViewPdfActivity.super.onBackPressed();
+            }
+
+            @Override
+            public void onCancel() {
+                ViewPdfActivity.super.onBackPressed();
+            }
+        });
+        confirmDialog.setCancelable(false);
+        confirmDialog.setCanceledOnTouchOutside(false);
+        confirmDialog.show();
+    }
+
     private void showErrorDialog() {
         NoticeDialog noticeDialog = new NoticeDialog(this, "Error message", "File is not valid. Please try again later.", "Exit",
-                this::onBackPressed);
+                ViewPdfActivity.super::onBackPressed);
         noticeDialog.setCancelable(false);
         noticeDialog.setCanceledOnTouchOutside(false);
         noticeDialog.show();
@@ -445,7 +305,7 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == REQUEST_EXTERNAL_PERMISSION_FOR_OPEN_LOCAL_FILE) {
             if (!notHaveStoragePermission()) {
-                setUpViewPager();
+                setupPdfViewer();
             } else {
                 showErrorDialog();
             }
@@ -459,37 +319,71 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
             return;
         }
 
+        int numberPage = FileUtils.getNumberPages(mFilePath);
+        setupTypePdf(numberPage);
+
+        if (numberPage > 0) {
+            float waitSecond;
+            if (numberPage < 10) {
+                waitSecond = 0.5f;
+            } else if (numberPage < 30) {
+                waitSecond = 0.7f;
+            } else if (numberPage < 50) {
+                waitSecond = 1.2f;
+            } else if (numberPage < 100) {
+                waitSecond = 1.6f;
+            } else if (numberPage < 150) {
+                waitSecond = 2.0f;
+            } else {
+                waitSecond = 2.3f;
+            }
+
+            LoadingDialog loadingDialog = new LoadingDialog(this);
+            loadingDialog.show();
+            Timer timer = new Timer();
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    runOnUiThread(loadingDialog::dismiss);
+                }
+            }, (int) (waitSecond * 1000));
+        }
+    }
+
+    private void setupTypePdf(int numberPage) {
         mPdfViewpager = findViewById(R.id.pdfviewfpager);
-        mPdfViewpager.setSwipeOrientation(mViewOption.getOrientation());
-        mPdfViewpager.setOffscreenPageLimit(2);
+        mPdfViewScroll = findViewById(R.id.pdfviewscroll);
 
-        mPageIndex = 0;
-        // If there is a savedInstanceState (screen orientations, etc.), we restore the page index.
-        if (null != savedBundle) {
-            mPageIndex = savedBundle.getInt(STATE_CURRENT_PAGE_INDEX, 0);
-        }
+        FirebaseRemoteUtils remoteUtils = new FirebaseRemoteUtils();
+        if (numberPage > remoteUtils.getNumberPageToMax()) {
+            mPdfViewpager.setVisibility(View.VISIBLE);
+            mPdfViewScroll.setVisibility(View.GONE);
+            mPdfViewpager.setSwipeOrientation(1);
+            mPdfViewpager.setOffscreenPageLimit(2);
 
-        try {
-            openRenderer();
-            setUpViewPager();
-        } catch (Exception e) {
-            suggestDownloadFullApp();
+            mPageIndex = 0;
+            // If there is a savedInstanceState (screen orientations, etc.), we restore the page index.
+            if (null != savedBundle) {
+                mPageIndex = savedBundle.getInt(STATE_CURRENT_PAGE_INDEX, 0);
+            }
+
+            try {
+                openRenderer();
+                setUpViewPager();
+            } catch (Exception e) {
+                suggestDownloadFullApp();
+            }
+        } else {
+            mPdfViewpager.setVisibility(View.GONE);
+            mPdfViewScroll.setVisibility(View.VISIBLE);
+            mPdfViewScroll.fromFile(mFilePath).show();
         }
     }
 
-    @Override
-    protected void onDestroy() {
-        try {
-            closeRenderer();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        super.onDestroy();
-    }
 
     @SuppressLint("SetTextI18n")
     private void setUpViewPager() {
-        PDFAdapter adapter = new PDFAdapter(this, this, mPdfRenderer.getPageCount(), mViewOption.getViewMode());
+        PDFAdapter adapter = new PDFAdapter(this, this, mPdfRenderer.getPageCount());
         mPdfViewpager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
@@ -500,7 +394,6 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
             @Override
             public void onPageSelected(int position) {
                 mPageIndex = position;
-                mPageInfoTextView.setText((mPageIndex + 1) + " / " + mPdfRenderer.getPageCount());
             }
 
             @Override
@@ -510,8 +403,6 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
         });
         mPdfViewpager.setAdapter(adapter);
         mPdfViewpager.setCurrentItem(mPageIndex);
-
-        mPageInfoTextView.setText((mPageIndex + 1) + " / " + mPdfRenderer.getPageCount());
     }
 
     @Override
@@ -565,35 +456,7 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
 
             mCurrentPage.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
 
-            if (mViewOption.getViewMode() == VIEW_MODE_DAY) {
-                return bitmap;
-            }
-
-            int width, height;
-            height = bitmap.getHeight();
-            width = bitmap.getWidth();
-
-            Bitmap nightModeBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-            Canvas c = new Canvas(nightModeBitmap);
-            Paint paint = new Paint();
-
-            ColorMatrix grayScaleMatrix = new ColorMatrix();
-            grayScaleMatrix.setSaturation(0);
-            ColorMatrix invertMatrix =
-                    new ColorMatrix(new float[] {
-                            -1,  0,  0,  0, 255,
-                            0, -1,  0,  0, 255,
-                            0,  0, -1,  0, 255,
-                            0,  0,  0,  1,   0});
-
-            ColorMatrix nightModeMatrix = new ColorMatrix();
-            nightModeMatrix.postConcat(grayScaleMatrix);
-            nightModeMatrix.postConcat(invertMatrix);
-
-            paint.setColorFilter(new ColorMatrixColorFilter(nightModeMatrix));
-            c.drawBitmap(bitmap, 0, 0, paint);
-
-            return nightModeBitmap;
+            return bitmap;
         } catch (Exception e) {
             Log.d("duynm", e.getMessage());
             return null;
@@ -644,5 +507,16 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
                 });
             });
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        try {
+            closeRenderer();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        super.onDestroy();
     }
 }

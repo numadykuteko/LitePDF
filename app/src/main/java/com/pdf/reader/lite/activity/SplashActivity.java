@@ -3,6 +3,7 @@ package com.pdf.reader.lite.activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -12,7 +13,9 @@ import com.google.android.gms.ads.InterstitialAd;
 import com.google.android.gms.ads.LoadAdError;
 import com.pdf.reader.lite.BuildConfig;
 import com.pdf.reader.lite.R;
+import com.pdf.reader.lite.utils.FirebaseRemoteUtils;
 import com.pdf.reader.lite.utils.NetworkUtils;
+import com.pdf.reader.lite.utils.PreferenceHelper;
 import com.pdf.reader.lite.utils.file.RealPathUtil;
 
 import java.util.Timer;
@@ -32,6 +35,8 @@ public class SplashActivity extends BaseActivity {
 
         setContentView(R.layout.activity_splash);
 
+        FirebaseRemoteUtils firebaseRemoteUtils = new FirebaseRemoteUtils();
+        firebaseRemoteUtils.fetchRemoteConfig(this, () -> {});
         precheckIntentFilter();
     }
 
@@ -81,51 +86,69 @@ public class SplashActivity extends BaseActivity {
             return;
         }
 
-        mTimer = new Timer();
-        mTimer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                runOnUiThread(() -> {
-                    mInterstitialAd.setAdListener(new AdListener());
-                    gotoTargetActivity();
-                });
-            }
-        }, 10000);
+        int numberTimeOpenOtherApp = PreferenceHelper.getInstance(this).getOpenFromOtherAppTime();
+        FirebaseRemoteUtils firebaseRemoteUtils = new FirebaseRemoteUtils();
 
-        AdRequest adRequest = new AdRequest.Builder().build();
-        mInterstitialAd = new InterstitialAd(this);
-        mInterstitialAd.setAdUnitId(BuildConfig.full_splash_id);
-        mInterstitialAd.setAdListener(new AdListener() {
-            @Override
-            public void onAdLoaded() {
-                mInterstitialAd.show();
-            }
+        Log.d("duynm", numberTimeOpenOtherApp + "");
+        Log.d("duynm", firebaseRemoteUtils.getNumberTimeShowAdsOnce() + "");
 
-            @Override
-            public void onAdFailedToLoad(LoadAdError adError) {
-                gotoTargetActivity();
-            }
-
-            @Override
-            public void onAdOpened() {
-                if (mTimer != null) {
-                    mTimer.cancel();
+        if (!mIsFromOpenPdf || numberTimeOpenOtherApp >= firebaseRemoteUtils.getNumberTimeShowAdsOnce()) {
+            mTimer = new Timer();
+            mTimer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    runOnUiThread(() -> {
+                        mInterstitialAd.setAdListener(new AdListener());
+                        gotoTargetActivity();
+                    });
                 }
-                // Code to be executed when the ad is displayed.
-            }
+            }, (int) firebaseRemoteUtils.getTimeoutSplash());
 
-            @Override
-            public void onAdClicked() {
-                // Code to be executed when the user clicks on an ad.
-            }
+            AdRequest adRequest = new AdRequest.Builder().build();
+            mInterstitialAd = new InterstitialAd(this);
+            mInterstitialAd.setAdUnitId(mIsFromOpenPdf ? BuildConfig.full_other_app_id : BuildConfig.full_splash_id);
+            mInterstitialAd.setAdListener(new AdListener() {
+                @Override
+                public void onAdLoaded() {
+                    mInterstitialAd.show();
+                }
 
-            @Override
-            public void onAdClosed() {
-                gotoTargetActivity();
-            }
+                @Override
+                public void onAdFailedToLoad(LoadAdError adError) {
+                    gotoTargetActivity();
+                }
 
-        });
-        mInterstitialAd.loadAd(adRequest);
+                @Override
+                public void onAdOpened() {
+                    if (mTimer != null) {
+                        mTimer.cancel();
+                    }
+                    // Code to be executed when the ad is displayed.
+                }
+
+                @Override
+                public void onAdClicked() {
+                    // Code to be executed when the user clicks on an ad.
+                }
+
+                @Override
+                public void onAdClosed() {
+                    gotoTargetActivity();
+                }
+
+            });
+            mInterstitialAd.loadAd(adRequest);
+            PreferenceHelper.getInstance(this).setOpenFromOtherAppTime(1);
+        } else {
+            Timer timer = new Timer();
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    gotoTargetActivity();
+                }
+            }, 1000);
+            PreferenceHelper.getInstance(this).setOpenFromOtherAppTime(numberTimeOpenOtherApp + 1);
+        }
     }
 
     private void gotoTargetActivity() {

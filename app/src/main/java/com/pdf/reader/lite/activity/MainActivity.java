@@ -24,6 +24,7 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
@@ -37,10 +38,14 @@ import com.pdf.reader.lite.component.ConfirmDialog;
 import com.pdf.reader.lite.component.ExitConfirmDialog;
 import com.pdf.reader.lite.component.RenameFileDialog;
 import com.pdf.reader.lite.component.SettingSortDialog;
+import com.pdf.reader.lite.component.UpdateDialog;
 import com.pdf.reader.lite.data.FileData;
+import com.pdf.reader.lite.utils.AdsShowCountMyPdfManager;
 import com.pdf.reader.lite.utils.CommonUtils;
 import com.pdf.reader.lite.utils.DateTimeUtils;
+import com.pdf.reader.lite.utils.FirebaseRemoteUtils;
 import com.pdf.reader.lite.utils.ToastUtils;
+import com.pdf.reader.lite.utils.UpdateInfo;
 import com.pdf.reader.lite.utils.adapter.FileListAdapter;
 import com.pdf.reader.lite.utils.adapter.OnFileItemWithOptionClickListener;
 import com.pdf.reader.lite.utils.file.FileUtilAsyncTask;
@@ -82,7 +87,6 @@ public class MainActivity extends BaseActivity implements OnFileItemWithOptionCl
     private InterstitialAd mMyPdfInterstitialAd;
     private boolean mAdsLoading = false;
     private boolean mAdsLoaded = false;
-    private AdRequest mAdRequest;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -298,6 +302,79 @@ public class MainActivity extends BaseActivity implements OnFileItemWithOptionCl
         mFileListAdapter = new FileListAdapter(this);
         mDataView.setLayoutManager(new LinearLayoutManager(this));
         mDataView.setAdapter(mFileListAdapter);
+
+        checkForUpdateApp();
+    }
+
+    private void checkForUpdateApp() {
+        FirebaseRemoteUtils firebaseRemoteUtils = new FirebaseRemoteUtils();
+        firebaseRemoteUtils.fetchRemoteConfig(this, () -> getUpdateInfo(firebaseRemoteUtils));
+    }
+
+    private void getUpdateInfo(FirebaseRemoteUtils firebaseRemoteUtils) {
+        UpdateInfo updateInfo = firebaseRemoteUtils.getUpdateInfo();
+
+        if (updateInfo != null) {
+            if (updateInfo.getRequiredUpdateList().contains(BuildConfig.VERSION_CODE) && updateInfo.isIsRequired()) {
+                if (updateInfo.getVersionCode() == BuildConfig.VERSION_CODE && (updateInfo.getNewPackage().length() == 0 || updateInfo.getNewPackage().equals(BuildConfig.APPLICATION_ID))) {
+                    return;
+                }
+
+                UpdateDialog updateDialog = new UpdateDialog(this, updateInfo.getVersionName(), () -> gotoUpdateApp(updateInfo), true);
+                updateDialog.show();
+            } else {
+                if (updateInfo.getVersionCode() > BuildConfig.VERSION_CODE && updateInfo.getStatus()) {
+                    UpdateDialog updateDialog = new UpdateDialog(this, updateInfo.getVersionName(), () -> gotoUpdateApp(updateInfo), false);
+                    updateDialog.show();
+                }
+            }
+        }
+    }
+
+    private void gotoUpdateApp(UpdateInfo updateInfo) {
+        String packageName = updateInfo.getNewPackage();
+        if (!packageName.equals(BuildConfig.APPLICATION_ID)) {
+            openByFullApp(packageName);
+        } else {
+            gotoMarket(packageName);
+        }
+    }
+
+    private void openByFullApp(String packageName) {
+        if (isAppAvailable(packageName)) {
+            Intent launchIntent = getPackageManager().getLaunchIntentForPackage(packageName);
+            if (launchIntent != null) {
+                try {
+                    startActivity(launchIntent);
+                } catch (Exception e) {
+                    gotoMarket(packageName);
+                }
+            } else {
+                gotoMarket(packageName);
+            }
+        } else {
+            gotoMarket(packageName);
+        }
+    }
+
+    private void gotoMarket(String packageName) {
+        Uri uri = Uri.parse("market://details?id=" + packageName);
+        Intent goToMarket = new Intent(Intent.ACTION_VIEW, uri);
+        try {
+            startActivity(goToMarket);
+        } catch (Exception e) {
+            Toast.makeText(this, "Sorry we can't open Google Play now.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private boolean isAppAvailable(String packageName) {
+        PackageManager pm = getPackageManager();
+        try {
+            pm.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private void preloadAds() {
@@ -484,7 +561,7 @@ public class MainActivity extends BaseActivity implements OnFileItemWithOptionCl
 
     @Override
     public void onClickItem(int position) {
-        if (mAdsLoading || (mMyPdfInterstitialAd != null && mMyPdfInterstitialAd.isLoading())) {
+        if (!AdsShowCountMyPdfManager.getInstance().checkShowAdsForClickItem() || mAdsLoading || (mMyPdfInterstitialAd != null && mMyPdfInterstitialAd.isLoading())) {
             openPdf(position);
         } else {
             if (mAdsLoaded && mMyPdfInterstitialAd != null && mMyPdfInterstitialAd.isLoaded()) {
@@ -502,6 +579,7 @@ public class MainActivity extends BaseActivity implements OnFileItemWithOptionCl
                 preloadAds();
             }
         }
+        AdsShowCountMyPdfManager.getInstance().increaseCountForClickItem();
     }
 
     private void openPdf(int position) {

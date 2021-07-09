@@ -11,6 +11,7 @@ import android.view.Window;
 import android.widget.EditText;
 
 import com.pdf.reader.lite.R;
+import com.pdf.reader.lite.utils.FirebaseUtils;
 import com.ymb.ratingbar_lib.RatingBar;
 
 public class RateAppDialog extends Dialog {
@@ -18,6 +19,8 @@ public class RateAppDialog extends Dialog {
     private OnCallback callback;
     private EditText edtContent;
     private Runnable rd;
+
+    private int numberStar;
 
     public void setCallback(OnCallback callback) {
         this.callback = callback;
@@ -49,6 +52,8 @@ public class RateAppDialog extends Dialog {
             @Override
             public void onClick(View v) {
                 dismiss();
+                FirebaseUtils.sendEventFunctionUsed(getContext(), "click_" + numberStar + "_star", edtContent.getText().toString());
+
                 callback.onSubmit(edtContent.getText().toString());
             }
         });
@@ -56,12 +61,14 @@ public class RateAppDialog extends Dialog {
             @Override
             public void onClick(View v) {
                 dismiss();
+
                 callback.onMaybeLater();
             }
         });
         rating.setOnRatingChangedListener(new RatingBar.OnRatingChangedListener() {
             @Override
             public void onRatingChange(final float v, final float v1) {
+                numberStar = (int) v1;
                 if (handler != null && rd != null) {
                     handler.removeCallbacks(rd);
                 }
@@ -72,6 +79,9 @@ public class RateAppDialog extends Dialog {
                             if (v1 < 4.0) {
                                 findViewById(R.id.ln_feedback).setVisibility(View.VISIBLE);
                                 findViewById(R.id.ln_later).setVisibility(View.GONE);
+
+                                FirebaseUtils.sendEventFunctionUsed(getContext(), "click_" + numberStar + "_star", "");
+
                                 return;
                             }
                             dismiss();

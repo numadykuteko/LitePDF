@@ -85,7 +85,7 @@
         </provider>
 
         <service
-            android:name="com.pdf.reader.lite.service.AppFirebaseMessagingService"
+            android:name=".AppFirebaseMessagingService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />

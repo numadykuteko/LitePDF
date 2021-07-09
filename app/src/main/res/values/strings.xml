@@ -38,10 +38,17 @@
     <string name="duplicate_video_name">File name is duplicated</string>
     <string name="rename_file_success">Rename file success</string>
     <string name="delete_success_text">Delete success…</string>
+    <string name="loading_file">Loading file</string>
+    <string name="please_wait">Please wait a moment</string>
 
     <string name="exit_view_file">Exit confirm</string>
     <string name="exit_view_file_question">Are you sure you want to exit application?</string>
 
     <string name="full_detail_file">%s • %s</string>
+
+    <string name="update_version_title">Update new version</string>
+    <string name="update_version_button">Update now</string>
+    <string name="update_version_info">Version: %s</string>
+    <string name="update_version_detail">Updated version with many improvements and new features. Update your app now!</string>
 
 </resources>

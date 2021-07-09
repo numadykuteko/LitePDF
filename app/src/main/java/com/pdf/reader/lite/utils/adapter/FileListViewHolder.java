@@ -48,7 +48,7 @@ public class FileListViewHolder extends RecyclerView.ViewHolder {
                     FileUtils.getFormattedSize(fileData.getSize()));
             mDateTextView.setText(text);
         } else {
-            mDateTextView.setText(fileData.getSize() + " Kb");
+            mDateTextView.setText(FileUtils.getFormattedSize(fileData.getSize()));
         }
 
         mContentView.setOnClickListener(v -> {

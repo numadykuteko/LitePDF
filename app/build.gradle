@@ -17,30 +17,17 @@ android {
         versionName "1.2"
     }
 
-
-    signingConfigs {
-        debug {
-            keyAlias 'key-release'
-            keyPassword 'hoangpm@123'
-            storeFile file('keystore.jks')
-            storePassword 'hoangpm@123'
-        }
-        release {
-            keyAlias 'key-release'
-            keyPassword 'hoangpm@123'
-            storeFile file('keystore.jks')
-            storePassword 'hoangpm@123'
-        }
-    }
-
     buildTypes {
         debug {
-            signingConfig signingConfigs.release
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
 
             buildConfigField('String', 'banner_id', '"ca-app-pub-3940256099942544/6300978111"')
             buildConfigField('String', 'native_id', '"ca-app-pub-3940256099942544/2247696110"')
             buildConfigField('String', 'full_my_pdf_id', '"ca-app-pub-3940256099942544/1033173712"')
             buildConfigField('String', 'full_splash_id', '"ca-app-pub-3940256099942544/1033173712"')
+            buildConfigField('String', 'full_other_app_id', '"ca-app-pub-3940256099942544/1033173712"')
             resValue "string", "app_id", "ca-app-pub-3940256099942544~3347511713"
             resValue "bool", "FIREBASE_ANALYTICS_DEACTIVATED", "true"
         }
@@ -49,13 +36,13 @@ android {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
 
-            buildConfigField('String', 'banner_id', '"ca-app-pub-3940256099942544/6300978111"')
-            buildConfigField('String', 'native_id', '"ca-app-pub-3940256099942544/2247696110"')
-            buildConfigField('String', 'full_my_pdf_id', '"ca-app-pub-3940256099942544/1033173712"')
-            buildConfigField('String', 'full_splash_id', '"ca-app-pub-3940256099942544/1033173712"')
-            resValue "string", "app_id", "ca-app-pub-3940256099942544~3347511713"
+            buildConfigField('String', 'banner_id', '"ca-app-pub-3617606523175567/1945431784"')
+            buildConfigField('String', 'native_id', '"ca-app-pub-3617606523175567/9357496870"')
+            buildConfigField('String', 'full_my_pdf_id', '"ca-app-pub-3617606523175567/6076248486"')
+            buildConfigField('String', 'full_splash_id', '"ca-app-pub-3617606523175567/7114476916"')
+            buildConfigField('String', 'full_other_app_id', '"ca-app-pub-3617606523175567/7006186779"')
+            resValue "string", "app_id", "ca-app-pub-3617606523175567~3833228528"
             resValue "bool", "FIREBASE_ANALYTICS_DEACTIVATED", "false"
         }
     }
@@ -76,9 +63,17 @@ dependencies {
     implementation platform('com.google.firebase:firebase-bom:26.2.0')
     implementation 'com.google.firebase:firebase-analytics'
     implementation 'com.google.firebase:firebase-crashlytics'
+    implementation 'com.google.firebase:firebase-messaging:21.0.1'
 
     // ads
     implementation 'com.google.android.gms:play-services-ads-lite:19.7.0'
 
     implementation 'com.github.yangmbin:RatingBar:1.0.0'
+
+    implementation "com.pdfview:pdfview-android:1.0.0"
+    implementation 'com.google.firebase:firebase-config:21.0.0'
+
+}
+repositories {
+    mavenCentral()
 }
