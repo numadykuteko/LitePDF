@@ -1,16 +1,12 @@
 package com.pdf.reader.lite.utils.file;
 
-import static android.os.ParcelFileDescriptor.MODE_READ_ONLY;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.graphics.pdf.PdfRenderer;
 import android.net.Uri;
-import android.os.ParcelFileDescriptor;
 import android.print.PrintDocumentAdapter;
 import android.print.PrintManager;
 import android.provider.MediaStore;
@@ -19,6 +15,7 @@ import android.webkit.MimeTypeMap;
 import androidx.core.app.ShareCompat;
 import androidx.core.content.FileProvider;
 
+import com.itextpdf.text.pdf.PdfReader;
 import com.pdf.reader.lite.R;
 import com.pdf.reader.lite.data.FileData;
 import com.pdf.reader.lite.utils.ToastUtils;
@@ -225,19 +222,13 @@ public class FileUtils {
     }
 
     public static int getNumberPages(String filePath) {
-        ParcelFileDescriptor fileDescriptor = null;
         try {
-            if (filePath != null)
-                fileDescriptor = ParcelFileDescriptor.open(new File(filePath), MODE_READ_ONLY);
-            if (fileDescriptor != null) {
-                PdfRenderer renderer = new PdfRenderer(fileDescriptor);
-
-                int numberPage = renderer.getPageCount();
-                renderer.close();
-                return numberPage;
+            PdfReader pdfReader = new PdfReader(String.valueOf(filePath));
+            if (pdfReader.isEncrypted()){
+                return 0;
             }
-        } catch (OutOfMemoryError | Exception ignored) {
-
+            return pdfReader.getNumberOfPages();
+        } catch (Exception e) {
         }
 
         return 0;

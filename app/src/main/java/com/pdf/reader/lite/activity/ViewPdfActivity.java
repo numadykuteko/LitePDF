@@ -377,6 +377,8 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
                 setUpViewPager();
             } catch (Exception e) {
                 suggestDownloadFullApp("Because can not init renderer");
+            } catch (OutOfMemoryError error) {
+                suggestDownloadFullApp("Because out of memory");
             }
         } else {
             mPdfViewpager.setVisibility(View.GONE);

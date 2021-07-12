@@ -14,13 +14,15 @@
         android:layout_width="120dp"
         android:layout_height="120dp"
         app:cardCornerRadius="@dimen/medium_background_radius"
-        app:cardElevation="@dimen/common_padding_small">
+        app:cardElevation="@dimen/common_padding_small"
+        app:cardBackgroundColor="@color/transparent">
+
         <ImageView
             android:id="@+id/background_splash"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="centerCrop"
-            android:src="@mipmap/ic_launcher" />
+            android:src="@drawable/icon" />
     </androidx.cardview.widget.CardView>
 
     <TextView
