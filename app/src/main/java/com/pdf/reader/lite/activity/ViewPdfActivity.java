@@ -103,7 +103,7 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
             mFilePath = extraFilePath;
 
             if (FileUtils.getNumberPages(extraFilePath) == 0) {
-                suggestDownloadFullApp();
+                suggestDownloadFullApp("Because file has 0 page or encrypted");
             } else {
                 savedBundle = savedInstanceState;
                 setupPdfViewer();
@@ -132,6 +132,7 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
                         finish();
                     } else {
                         ViewPdfActivity.super.onBackPressed();
+                        finish();
                     }
                 }
 
@@ -140,6 +141,7 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
                     ToastUtils.showMessageShort(getApplicationContext(), "Thank you for your rating");
                     RateUtils.setRateDone(getApplicationContext());
                     ViewPdfActivity.super.onBackPressed();
+                    finish();
                 }
 
                 @Override
@@ -162,6 +164,7 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
                         finish();
                     } else {
                         ViewPdfActivity.super.onBackPressed();
+                        finish();
                     }
                 }
             });
@@ -275,17 +278,19 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
         }
     }
 
-    private void suggestDownloadFullApp() {
-        ConfirmDialog confirmDialog = new ConfirmDialog(this, "App not support", "Sorry we can not open this file. Would you like to try with full function application?", new ConfirmDialog.ConfirmListener() {
+    private void suggestDownloadFullApp(String message) {
+        ConfirmDialog confirmDialog = new ConfirmDialog(this, "App not support", "Sorry we can not open this file. Would you like to try with full function application?\n\nError: " + message, new ConfirmDialog.ConfirmListener() {
             @Override
             public void onSubmit() {
                 openByFullApp();
                 ViewPdfActivity.super.onBackPressed();
+                finish();
             }
 
             @Override
             public void onCancel() {
                 ViewPdfActivity.super.onBackPressed();
+                finish();
             }
         });
         confirmDialog.setCancelable(false);
@@ -371,7 +376,7 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
                 openRenderer();
                 setUpViewPager();
             } catch (Exception e) {
-                suggestDownloadFullApp();
+                suggestDownloadFullApp("Because can not init renderer");
             }
         } else {
             mPdfViewpager.setVisibility(View.GONE);
