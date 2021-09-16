@@ -13,8 +13,8 @@ android {
         applicationId "com.pdf.reader.lite"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 7
-        versionName "1.6"
+        versionCode 8
+        versionName "1.7"
     }
 
     buildTypes {
@@ -37,12 +37,12 @@ android {
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
 
-            buildConfigField('String', 'banner_id', '"ca-app-pub-5210987550761304/3322249130"')
-            buildConfigField('String', 'native_id', '"ca-app-pub-5210987550761304/8083621226"')
-            buildConfigField('String', 'full_my_pdf_id', '"ca-app-pub-5210987550761304/4270361118"')
-            buildConfigField('String', 'full_splash_id', '"ca-app-pub-5210987550761304/3344292252"')
-            buildConfigField('String', 'full_other_app_id', '"ca-app-pub-5210987550761304/7949751672"')
-            resValue "string", "app_id", "ca-app-pub-5210987550761304~8466764601"
+            buildConfigField('String', 'banner_id', '"ca-app-pub-5210987550761304/33222491"')
+            buildConfigField('String', 'native_id', '"ca-app-pub-5210987550761304/80836212"')
+            buildConfigField('String', 'full_my_pdf_id', '"ca-app-pub-5210987550761304/42703611"')
+            buildConfigField('String', 'full_splash_id', '"ca-app-pub-5210987550761304/33442922"')
+            buildConfigField('String', 'full_other_app_id', '"ca-app-pub-5210987550761304/79497516"')
+            resValue "string", "app_id", "ca-app-pub-5210987550761304~84667646"
             resValue "bool", "FIREBASE_ANALYTICS_DEACTIVATED", "false"
         }
     }
