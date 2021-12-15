@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.print.PrintDocumentAdapter;
 import android.print.PrintManager;
 import android.provider.MediaStore;
@@ -175,23 +176,38 @@ public class FileUtils {
         }
     }
 
-    public static void shareFile(Context context, File file) {
-        Uri uri = FileProvider.getUriForFile(context, AUTHORITY_APP, file);
-        ArrayList<Uri> uris = new ArrayList<>();
-        uris.add(uri);
+    private static Uri uriFromFile(Context context, File file) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            return FileProvider.getUriForFile(
+                    context,
+                    AUTHORITY_APP,
+                    file
+            );
+        } else {
+            return Uri.fromFile(file);
+        }
+    }
 
-        shareFileWithType(context, uris, "application/pdf");
+    public static void shareFile(Context context, File file) {
+        try {
+            Uri uri = uriFromFile(context, file);
+            ArrayList<Uri> uris = new ArrayList<>();
+            uris.add(uri);
+
+            shareFileWithType(context, uris, "application/pdf");
+        } catch (Exception e) {
+            ToastUtils.showMessageShort(context, "Can not share this file due to privacy.");
+        }
     }
 
     private static void shareFileWithType(Context context, ArrayList<Uri> uris, String type) {
-        Intent intent = new Intent();
-        intent.setAction(Intent.ACTION_SEND_MULTIPLE);
-        intent.putExtra(Intent.EXTRA_TEXT, "Share this file");
-        intent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        intent.setType(type);
-
         try {
+            Intent intent = new Intent();
+            intent.setAction(Intent.ACTION_SEND_MULTIPLE);
+            intent.putExtra(Intent.EXTRA_TEXT, "Share this file");
+            intent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            intent.setType(type);
             context.startActivity(Intent.createChooser(intent, "Select app to send message…"));
         } catch (Exception e) {
             ToastUtils.showMessageShort(context, "Can not share file now.");
@@ -199,14 +215,13 @@ public class FileUtils {
     }
 
     public static void uploadFile(Activity context, File file) {
-        Uri uri = FileProvider.getUriForFile(context, AUTHORITY_APP, file);
-        Intent uploadIntent = ShareCompat.IntentBuilder.from(context)
-                .setText("Share Document")
-                .setType("application/pdf")
-                .setStream(uri)
-                .getIntent();
-
         try {
+            Uri uri = uriFromFile(context, file);
+            Intent uploadIntent = ShareCompat.IntentBuilder.from(context)
+                    .setText("Share Document")
+                    .setType("application/pdf")
+                    .setStream(uri)
+                    .getIntent();
             context.startActivity(uploadIntent);
         } catch (Exception e) {
             ToastUtils.showMessageShort(context, "Can not upload file now.");

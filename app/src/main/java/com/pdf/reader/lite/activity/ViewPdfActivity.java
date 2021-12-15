@@ -437,14 +437,19 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
 
 
     private void closeRenderer() throws IOException {
-        if (null != mCurrentPage)
-            mCurrentPage.close();
+        try {
+            if (null != mCurrentPage)
+                mCurrentPage.close();
 
-        if (null != mPdfRenderer)
-            mPdfRenderer.close();
+            if (null != mPdfRenderer)
+                mPdfRenderer.close();
 
-        if (null != mFileDescriptor)
-            mFileDescriptor.close();
+            if (null != mFileDescriptor)
+                mFileDescriptor.close();
+        } catch (Exception e) {
+            // nothing
+        }
+
     }
 
     private Bitmap toRightBitmap(int index) {
@@ -464,8 +469,7 @@ public class ViewPdfActivity extends BaseActivity implements IShowPage {
             mCurrentPage.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
 
             return bitmap;
-        } catch (Exception e) {
-            Log.d("duynm", e.getMessage());
+        } catch (Exception | OutOfMemoryError e) {
             return null;
         }
     }

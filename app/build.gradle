@@ -6,15 +6,15 @@ apply plugin: 'com.google.gms.google-services'
 apply plugin: 'com.google.firebase.crashlytics'
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion 31
     buildToolsVersion "29.0.3"
 
     defaultConfig {
         applicationId "com.pdf.reader.lite"
         minSdkVersion 21
-        targetSdkVersion 29
-        versionCode 8
-        versionName "1.7"
+        targetSdkVersion 31
+        versionCode 11
+        versionName "1.10"
     }
 
     buildTypes {
@@ -37,12 +37,12 @@ android {
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
 
-            buildConfigField('String', 'banner_id', '"ca-app-pub-5210987550761304/33222491"')
-            buildConfigField('String', 'native_id', '"ca-app-pub-5210987550761304/80836212"')
-            buildConfigField('String', 'full_my_pdf_id', '"ca-app-pub-5210987550761304/42703611"')
-            buildConfigField('String', 'full_splash_id', '"ca-app-pub-5210987550761304/33442922"')
-            buildConfigField('String', 'full_other_app_id', '"ca-app-pub-5210987550761304/79497516"')
-            resValue "string", "app_id", "ca-app-pub-5210987550761304~84667646"
+            buildConfigField('String', 'banner_id', '"ca-app-pub-3617606523175567/1945431784"')
+            buildConfigField('String', 'native_id', '"ca-app-pub-3617606523175567/9357496870"')
+            buildConfigField('String', 'full_my_pdf_id', '"ca-app-pub-3617606523175567/6076248486"')
+            buildConfigField('String', 'full_splash_id', '"ca-app-pub-3617606523175567/7114476916"')
+            buildConfigField('String', 'full_other_app_id', '"ca-app-pub-3617606523175567/7006186779"')
+            resValue "string", "app_id", "ca-app-pub-3617606523175567~3833228528"
             resValue "bool", "FIREBASE_ANALYTICS_DEACTIVATED", "false"
         }
     }

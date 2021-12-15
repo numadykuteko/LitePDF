@@ -106,6 +106,8 @@
     <RelativeLayout
         android:id="@+id/banner_ads"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:layout_marginTop="@dimen/common_padding_big" />
+        android:layout_height="wrap_content"
+        android:minHeight="55dp"
+        android:layout_marginTop="@dimen/common_padding_big"
+        android:layout_marginBottom="2dp"/>
 </LinearLayout>
